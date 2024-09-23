@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0" version="24.7.14">
+  <diagram name="Page-1" id="rcels7RW92902gxxBqAg">
+    <mxGraphModel dx="795" dy="473" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Y60bEyeAWoG7-dj0g1iP-2" target="Y60bEyeAWoG7-dj0g1iP-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="380" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-2" value="&lt;div&gt;Client retrieves data using GET&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Y60bEyeAWoG7-dj0g1iP-12" target="Y60bEyeAWoG7-dj0g1iP-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-12" value="Proxy Node forwards data to Nest Node" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="312.5" y="170" width="135" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Y60bEyeAWoG7-dj0g1iP-14" target="Y60bEyeAWoG7-dj0g1iP-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-14" value="Proxy Node forwards data to Nest Node" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="312.5" y="260" width="135" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-16" value="" style="endArrow=none;html=1;rounded=0;dashed=1;dashPattern=8 8;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="280" y="310" as="sourcePoint" />
+            <mxPoint x="280" y="70" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-17" value="IPc" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="70" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-18" value="Pc" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="70" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-21" value="IPp" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="70" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-22" value="Pp" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="70" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-23" value="IP Src&amp;nbsp; Port Src" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="45" y="40" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-24" value="IP Dst&amp;nbsp; Port Dst" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="155" y="40" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-25" value="IPp" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="170" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-26" value="Rand" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="170" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-27" value="IPn" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="170" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-28" value="Rand" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="170" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-29" value="local IP" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="260" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-30" value="Psrc" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="260" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-31" value="local IP" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="260" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-32" value="Pdst" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="260" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Y60bEyeAWoG7-dj0g1iP-33" value="Proxy Node forwards data to IoT Device" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="312.5" y="340" width="135" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
