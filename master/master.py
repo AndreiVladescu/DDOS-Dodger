@@ -4,9 +4,9 @@ import random  # Import random to pick a random proxy
 
 # List of proxy nodes (their URLs)
 PROXY_NODES = [
-    "http://192.168.10.10:5000/update-pairs",
-    "http://192.168.10.20:5000/update-pairs",
-    "http://192.168.10.30:5000/update-pairs"
+    "http://proxy1:5000/update-pairs"#,
+    #"http://192.168.10.20:5000/update-pairs",
+    #"http://192.168.10.30:5000/update-pairs"
 ]
 
 # Data structure to keep track of client-server-proxy connections

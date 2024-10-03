@@ -1,0 +1,29 @@
+version: '3'
+services:
+  proxy1:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.proxy
+    container_name: proxy1
+    networks:
+      - test-network
+    expose:
+      - "5000"
+    ports:
+      - "5001:5000"
+
+  master:
+    build:
+      context: ./master
+      dockerfile: Dockerfile.master
+    container_name: master
+    networks:
+      - test-network
+    environment:
+      - PROXY_NODES=http://proxy1:5000/update-pairs
+    stdin_open: true
+    tty: true
+
+networks:
+  test-network:
+    driver: bridge
