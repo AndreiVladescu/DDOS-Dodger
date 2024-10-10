@@ -1,76 +1,69 @@
-import requests
-import json
-import random  # Import random to pick a random proxy
+import socket
+import random
 
-# List of proxy nodes (their URLs)
-PROXY_NODES = [
-    "http://proxy1:5000/update-pairs"#,
-    #"http://192.168.10.20:5000/update-pairs",
-    #"http://192.168.10.30:5000/update-pairs"
-]
+# Static IP of the Proxy (assuming the Proxy's static IP is 172.18.0.20)
+PROXY_IP = '172.18.0.20'
+PROXY_PORT = 6000  # The port where the Proxy listens for socket connections
 
 # Data structure to keep track of client-server-proxy connections
 connection_records = []
 
-def update_proxy(action, client_ip, proxy_ip, server_ip):
-    # Data payload to be sent to the proxy
-    data = {
-        "action": action,
-        "source_ip": client_ip,
-        "dest_ip": server_ip
-    }
-
+# Function to send IP update to the proxy using TCP sockets
+def update_proxy(action, client_ip, server_ip):
     try:
-        # Send the update request to the specified proxy
-        print(f"Sending update to proxy: {proxy_ip}")
-        response = requests.post(proxy_ip, json=data)
+        # Create a TCP client socket
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            client_socket.connect((PROXY_IP, PROXY_PORT))
 
-        # Handle the response from the proxy node
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Update successful on {proxy_ip}: {result}")
-            return True
-        else:
-            print(f"Failed to update proxy {proxy_ip}: {response.status_code}, {response.text}")
-            return False
+            # Send the action and IPs to the Proxy (e.g., "allow 172.18.0.100 172.18.0.30")
+            message = f"{action} {client_ip} {server_ip}".encode()
+            client_socket.sendall(message)
+
+            # Receive the response from the Proxy
+            response = client_socket.recv(1024)
+            print(f"Proxy response: {response.decode()}")
 
     except Exception as e:
-        print(f"Error while connecting to proxy {proxy_ip}: {e}")
-        return False
+        print(f"Error while communicating with Proxy: {e}")
 
+# Function to manage the connection (either allow or deny)
 def manage_connection(action, client_ip, server_ip):
     if action == "allow":
-        # Pick one random proxy from the list
-        chosen_proxy = random.choice(PROXY_NODES)
-        success = update_proxy(action, client_ip, chosen_proxy, server_ip)
-        
-        if success:
-            # Add the connection to the records
-            connection_records.append({
-                "client_ip": client_ip,
-                "proxy_ip": chosen_proxy,
-                "server_ip": server_ip
-            })
+        success = update_proxy(action, client_ip, server_ip)
+
+        # If the update is successful, add the connection to the records
+        connection_records.append({
+            "client_ip": client_ip,
+            "proxy_ip": PROXY_IP,
+            "server_ip": server_ip
+        })
 
     elif action == "deny":
         # Find and remove the connection record for the client-server pair
         connection_records[:] = [record for record in connection_records 
                                  if not (record['client_ip'] == client_ip and record['server_ip'] == server_ip)]
+        # Send deny request to Proxy
+        update_proxy(action, client_ip, server_ip)
 
-        # Deny on the proxy that was previously facilitating this connection
-        for record in connection_records:
-            if record['client_ip'] == client_ip and record['server_ip'] == server_ip:
-                chosen_proxy = record['proxy_ip']
-                update_proxy(action, client_ip, chosen_proxy, server_ip)
-                break
+# Function to load default rules into the proxy at the beginning
+def load_default_rules():
+    # Static IPs of the client and nest
+    client_ip = "172.18.0.100"
+    nest_ip = "172.18.0.30"
+
+    # Allow traffic from client to nest by default
+    update_proxy("allow", client_ip, nest_ip)
 
 if __name__ == "__main__":
+    # Load default rules into the Proxy
+    load_default_rules()
 
+    # Run the master loop to accept user input
     while True:
         # Prompt for user input
         user_input = input("\nEnter action (allow/deny) client_ip server_ip: ")
         
-        # Exit the loop if user types 'exit'
+        # Exit the loop if the user types 'exit'
         if user_input.lower() == 'exit':
             print("Exiting program.")
             break
@@ -78,15 +71,15 @@ if __name__ == "__main__":
         try:
             # Split input into components
             action, client_ip, server_ip = user_input.split()
-            
+
             # Validate the action
             if action not in ["allow", "deny"]:
                 print("Invalid action. Please use 'allow' or 'deny'.")
                 continue
-            
+
             # Manage the connection based on user input
             manage_connection(action, client_ip, server_ip)
-            
+
             # Print the updated connection records
             print("\nCurrent Connections:")
             for record in connection_records:

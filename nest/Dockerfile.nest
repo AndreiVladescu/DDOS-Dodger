@@ -1,17 +1,21 @@
-# Use Python 3.9 slim as the base image
+# Use a base Python image
 FROM python:3.9-slim
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install Flask (and other necessary packages if needed)
-RUN pip install Flask
+# Install Flask
+RUN pip install flask
+# Copy the requirements if there are any (optional)
+# COPY requirements.txt ./
+# RUN pip install -r requirements.txt
 
-# Copy the nest.py script into the container's working directory
-COPY nest.py /app/nest.py
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Expose port 5000 for Flask app
-EXPOSE 5000
+# Create the great_success.txt file
+RUN echo "Indeed, great success" > great_success.txt
 
-# Run the Flask app when the container starts
-CMD ["python", "nest.py"]
+
+# Make sure the app is executable
+CMD ["python", "-u","nest.py"]

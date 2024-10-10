@@ -1,0 +1,18 @@
+# Use Python 3.9 slim as the base image
+FROM python:3.9-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install the required dependencies (requests library)
+RUN pip install requests
+
+# Install curl and any necessary packages
+RUN apt-get update && apt-get install -y \
+    curl 
+
+# Copy the requester.py script to the container
+COPY client.py /app/client.py
+
+# Set the default command to run the requester script
+CMD ["python","-u", "client.py"]

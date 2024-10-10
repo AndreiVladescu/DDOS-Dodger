@@ -1,4 +1,3 @@
-version: '3'
 services:
   proxy1:
     build:
@@ -6,12 +5,14 @@ services:
       dockerfile: Dockerfile.proxy
     container_name: proxy1
     networks:
-      - test-network
+      test-network:
+        ipv4_address: 172.18.0.20  # Static IP for the Proxy
     expose:
-      - "5000"
+      - "6000"
     ports:
-      - "5001:5000"
-    privileged: true
+      - "6001:6000"
+    privileged: true  # Ensure iptables can run
+    command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
 
   master:
     build:
@@ -19,9 +20,12 @@ services:
       dockerfile: Dockerfile.master
     container_name: master
     networks:
-      - test-network
+      test-network:
+        ipv4_address: 172.18.0.10  # Static IP for the Master
     stdin_open: true
     tty: true
+    depends_on:
+      - proxy1
 
   nest:
     build:
@@ -29,12 +33,28 @@ services:
       dockerfile: Dockerfile.nest
     container_name: nest
     networks:
-      - test-network
+      test-network:
+        ipv4_address: 172.18.0.30  # Static IP for the Nest
     expose:
       - "5000"
     ports:
       - "5002:5000"
 
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.client
+    container_name: client
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.100  # Static IP for the Client
+    depends_on:
+      - proxy1
+
 networks:
   test-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/24
+    external: true

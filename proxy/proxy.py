@@ -1,73 +1,114 @@
 import os
-from flask import Flask, request, jsonify
+import socket
 
-app = Flask(__name__)
+# List of allowed IP pairs: (Source IP, Destination IP/Name)
+allowed_pairs = []
 
-# Initial allowed IP pairs (hardcoded)
-allowed_pairs = [
-    ("192.168.0.100", "172.16.0.100"),
-    ("192.168.0.100", "172.16.0.200")
-]
+# Get the Proxy container's IP address
+def get_proxy_ip():
+    return os.popen("hostname -I").read().strip()
 
-# Flush the iptables FORWARD chain and apply the allowed rules
-def setup_iptables():
-    # Clear any existing forwarding rules first (optional, to start clean)
-    os.system("iptables -F FORWARD")
+# Function to set up nftables with default drop policy and NAT configuration
+def setup_nftables():
+    # Add NAT table
+    os.system("nft add table ip nat")
 
-    # Allow forwarding for each allowed pair
-    for source_ip, dest_ip in allowed_pairs:
-        print(f"Allowing forwarding from {source_ip} to {dest_ip}")
-        os.system(f"iptables -A FORWARD -s {source_ip} -d {dest_ip} -j ACCEPT")
+    # Add prerouting chain (for incoming NAT)
+    os.system("nft add chain ip nat prerouting { type nat hook prerouting priority -100 \\; }")
 
-    # Block all other traffic by default
-    os.system("iptables -A FORWARD -j DROP")
-    print("Blocked all other forwarding traffic")
+    # Add postrouting chain (for outgoing NAT)
+    os.system("nft add chain ip nat postrouting { type nat hook postrouting priority 100 \\; }")
 
-# Function to add an IP pair to iptables and the allowed pairs list
+    # Add DNAT rule to forward traffic on TCP port 5000 to 172.18.0.30
+    os.system("nft add rule ip nat prerouting iifname eth0 tcp dport 5000 dnat to 172.18.0.30")
+
+    # Add masquerade rule for traffic going to 172.18.0.30
+    os.system("nft add rule ip nat postrouting ip daddr 172.18.0.30 masquerade")
+
+    # Create inet filter table for filtering
+    os.system("nft add table inet filter")
+
+    # Add input chain to filter traffic (policy drop by default)
+    os.system("nft add chain inet filter input { type filter hook input priority 0 \\; policy drop \\; }")
+
+    # Allow only master to access port 6000 (proxy itself, no forwarding)
+    os.system("nft add rule inet filter input ip saddr 172.18.0.10 tcp dport 6000 accept")
+
+    print("nftables initialized with default rules.")
+
+# Function to apply DNAT and SNAT rules using nftables
+def apply_filter_rules(source_ip, dest_ip):
+    '''
+    # Allow traffic from 172.18.0.200 to access port 5000 (proxy and forward to .30)
+    os.system("nft add rule inet filter input ip saddr 172.18.0.200 tcp dport 5000 accept")
+    '''
+
+    os.system(f'nft add rule inet filter input ip saddr {source_ip} tcp dport 5000 accept')
+
+    print(f"Added NAT rules: {source_ip} -> {dest_ip}")
+
+# Function to add a new client-server pair and apply forwarding rules
 def add_ip_pair(source_ip, dest_ip):
     if (source_ip, dest_ip) not in allowed_pairs:
         allowed_pairs.append((source_ip, dest_ip))
-        os.system(f"iptables -A FORWARD -s {source_ip} -d {dest_ip} -j ACCEPT")
-        print(f"Allowed new pair: {source_ip} -> {dest_ip}")
+        apply_filter_rules(source_ip, dest_ip)
         return True
     return False
 
-# Function to remove an IP pair from iptables and the allowed pairs list
-def remove_ip_pair(source_ip, dest_ip):
-    if (source_ip, dest_ip) in allowed_pairs:
-        allowed_pairs.remove((source_ip, dest_ip))
-        os.system(f"iptables -D FORWARD -s {source_ip} -d {dest_ip} -j ACCEPT")
-        print(f"Removed pair: {source_ip} -> {dest_ip}")
-        return True
-    return False
+# Function to remove a specific IP rule from nftables
+def remove_ip(source_ip, dest_ip):
 
-# Flask route to handle updates from the master node
-@app.route('/update-pairs', methods=['POST'])
-def update_pairs():
-    data = request.json
-    action = data.get('action')  # should be "allow" or "deny"
-    source_ip = data.get('source_ip')
-    dest_ip = data.get('dest_ip')
+    allowed_pairs.remove((source_ip, dest_ip))
+    os.system(f'nft delete rule inet filter input ip saddr {source_ip} tcp dport 5000 accept')
 
-    if not source_ip or not dest_ip or action not in ['allow', 'deny']:
-        return jsonify({"error": "Invalid data"}), 400
+    print(f"Removed NAT rules: {source_ip} -> {dest_ip}")
 
-    if action == 'allow':
-        if add_ip_pair(source_ip, dest_ip):
-            return jsonify({"status": "allowed", "source_ip": source_ip, "dest_ip": dest_ip}), 200
-        else:
-            return jsonify({"status": "already allowed"}), 200
+# TCP server to listen for updates from the master
+def start_tcp_server():
+    # Define server address and port
+    host = '0.0.0.0'  # Listen on all available network interfaces
+    port = 6000        # Arbitrary port for the TCP server
 
-    elif action == 'deny':
-        if remove_ip_pair(source_ip, dest_ip):
-            return jsonify({"status": "denied", "source_ip": source_ip, "dest_ip": dest_ip}), 200
-        else:
-            return jsonify({"status": "pair not found"}), 200
+    #add_ip_pair("172.18.0.100", "172.18.0.30")
 
-# Main function to run the Flask app and set up initial iptables
+    # Create the TCP server socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((host, port))
+        server_socket.listen()
+
+        print(f"Proxy TCP server listening on {host}:{port}")
+
+        while True:
+            # Wait for a connection from the master
+            client_socket, addr = server_socket.accept()
+            with client_socket:
+                print(f"Connected by {addr}")
+                
+                # Receive the message from the master
+                data = client_socket.recv(1024).decode()
+                if not data:
+                    break
+                
+                # The message should be in the format "allow <source_ip> <dest_ip>"
+                action, source_ip, dest_ip = data.split()
+
+                if action == "allow":
+                    if add_ip_pair(source_ip, dest_ip):
+                        client_socket.sendall(b"IP pair allowed.\n")
+                    else:
+                        client_socket.sendall(b"IP pair already allowed.\n")
+
+                elif action == "deny":
+                    remove_ip(source_ip, dest_ip)
+
+                    client_socket.sendall(b"IP pair removed.\n")
+
+                else:
+                    client_socket.sendall(b"Invalid action.\n")
+
 if __name__ == "__main__":
-    # Setup initial iptables rules
-    setup_iptables()
+    # Setup initial nftables rules
+    setup_nftables()
 
-    # Start Flask server to listen for updates from master node
-    app.run(host="0.0.0.0", port=5000)
+    # Start the TCP server to listen for updates from the master
+    start_tcp_server()

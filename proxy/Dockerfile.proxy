@@ -1,23 +1,20 @@
-# Use Python as the base image
 FROM python:3.9-slim
+
+# Install nftables and any necessary packages
+RUN apt-get update && apt-get install -y \
+    nftables \
+    iproute2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Switch to root user
-USER root
+# Copy the proxy script
+COPY proxy.py /app/proxy.py
 
-# Install iptables and any dependencies
-RUN apt-get update && apt-get install -y iptables
-
-# Install the required dependencies
-RUN pip install Flask
-
-# Copy the proxy.py file from the host (./proxy/proxy.py) to the container (/app/proxy.py)
-COPY ./proxy.py ./proxy.py
-
-# Expose port 5000 for the Flask app inside the container
+# Expose the TCP port used for communication with the master
+EXPOSE 6000
 EXPOSE 5000
 
-# Command to run the proxy server when the container starts
-CMD ["python", "proxy.py"]
+# Run the proxy server
+CMD ["python","-u", "proxy.py"]

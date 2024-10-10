@@ -1,14 +1,11 @@
-# Use Python as the base image
+# Dockerfile for Master
 FROM python:3.9-slim
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install the required dependencies
-RUN pip install requests
+# Copy the master script to the container
+COPY master.py /app/master.py
 
-# Copy the master.py file from the host (./master/master.py) to the container (/app/master.py)
-COPY ./master.py ./master.py
-
-# Command to run the master script when the container starts
-CMD ["python", "master.py"]
+# Run the master app continuously for user input
+CMD ["python", "-u", "master.py"]
