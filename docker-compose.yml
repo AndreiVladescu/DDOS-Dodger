@@ -11,6 +11,7 @@ services:
       - "5000"
     ports:
       - "5001:5000"
+    privileged: true
 
   master:
     build:
@@ -19,10 +20,20 @@ services:
     container_name: master
     networks:
       - test-network
-    environment:
-      - PROXY_NODES=http://proxy1:5000/update-pairs
     stdin_open: true
     tty: true
+
+  nest:
+    build:
+      context: ./nest
+      dockerfile: Dockerfile.nest
+    container_name: nest
+    networks:
+      - test-network
+    expose:
+      - "5000"
+    ports:
+      - "5002:5000"
 
 networks:
   test-network:
