@@ -40,14 +40,25 @@ services:
     ports:
       - "5002:5000"
 
-  client:
+  client_user:
     build:
       context: ./client
       dockerfile: Dockerfile.client
-    container_name: client
+    container_name: client_user
     networks:
       test-network:
-        ipv4_address: 172.18.0.100  # Static IP for the Client
+        ipv4_address: 172.18.0.100  # Static IP for Client 1
+    depends_on:
+      - proxy
+
+  client_attacker:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.client
+    container_name: client_attacker
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.110  # Static IP for Client 2
     depends_on:
       - proxy
 
