@@ -1,4 +1,4 @@
-# Use Python 3.9 slim as the base image
+# Dockerfile for Client
 FROM python:3.9-slim
 
 # Set the working directory inside the container

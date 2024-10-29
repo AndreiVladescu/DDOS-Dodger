@@ -1,9 +1,9 @@
 services:
-  proxy1:
+  proxy:
     build:
       context: ./proxy
       dockerfile: Dockerfile.proxy
-    container_name: proxy1
+    container_name: proxy
     networks:
       test-network:
         ipv4_address: 172.18.0.20  # Static IP for the Proxy
@@ -25,7 +25,7 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - proxy1
+      - proxy
 
   nest:
     build:
@@ -49,7 +49,7 @@ services:
       test-network:
         ipv4_address: 172.18.0.100  # Static IP for the Client
     depends_on:
-      - proxy1
+      - proxy
 
 networks:
   test-network:
