@@ -9,6 +9,8 @@ RUN pip install requests
 
 # Install curl and any necessary packages
 RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    traceroute \
     curl 
 
 # Copy the requester.py script to the container

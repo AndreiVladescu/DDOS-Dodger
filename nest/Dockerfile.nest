@@ -5,17 +5,22 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install Flask
-RUN pip install flask
+RUN pip install flask 
 # Copy the requirements if there are any (optional)
 # COPY requirements.txt ./
 # RUN pip install -r requirements.txt
+
+# Install curl and any necessary packages
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    traceroute \
+    curl 
 
 # Copy the current directory contents into the container at /app
 COPY . /app
 
 # Create the great_success.txt file
 RUN echo "Indeed, great success" > great_success.txt
-
 
 # Make sure the app is executable
 CMD ["python", "-u","nest.py"]

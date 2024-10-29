@@ -56,7 +56,7 @@ def load_default_rules():
 
 if __name__ == "__main__":
     # Load default rules into the Proxy
-    load_default_rules()
+    # load_default_rules()
 
     # Run the master loop to accept user input
     while True:

@@ -1,9 +1,11 @@
 FROM python:3.9-slim
 
-# Install nftables and any necessary packages
+# Install nftables, iproute2, ping, and traceroute
 RUN apt-get update && apt-get install -y \
     nftables \
     iproute2 \
+    iputils-ping \
+    traceroute \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -12,7 +14,7 @@ WORKDIR /app
 # Copy the proxy script
 COPY proxy.py /app/proxy.py
 
-# Expose the TCP port used for communication with the master
+# Expose the TCP ports used for communication
 EXPOSE 6000
 EXPOSE 5000
 

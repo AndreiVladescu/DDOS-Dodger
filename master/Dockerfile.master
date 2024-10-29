@@ -4,6 +4,13 @@ FROM python:3.9-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+
+# Install curl and any necessary packages
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    traceroute \
+    curl 
+
 # Copy the master script to the container
 COPY master.py /app/master.py
 
