@@ -4,14 +4,15 @@ FROM python:3.9-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install the required dependencies (requests library)
-RUN pip install requests
-
 # Install curl and any necessary packages
 RUN apt-get update && apt-get install -y \
     iputils-ping \
     traceroute \
+    iproute2 \
     curl 
+
+# Install the required dependencies (requests library)
+RUN pip install requests
 
 # Copy the requester.py script to the container
 COPY client.py /app/client.py

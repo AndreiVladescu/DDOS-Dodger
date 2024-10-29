@@ -1,5 +1,8 @@
 FROM python:3.9-slim
 
+# Set the working directory inside the container
+WORKDIR /app
+
 # Install nftables, iproute2, ping, and traceroute
 RUN apt-get update && apt-get install -y \
     nftables \
@@ -7,9 +10,6 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     traceroute \
     && rm -rf /var/lib/apt/lists/*
-
-# Set the working directory inside the container
-WORKDIR /app
 
 # Copy the proxy script
 COPY proxy.py /app/proxy.py
