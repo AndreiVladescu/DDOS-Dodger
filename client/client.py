@@ -44,6 +44,8 @@ def send_request():
             print(f"Error querying DNS server: {e}")
             continue
         while True:
+            if proxy_ip is None:
+                break
             try:
                 # Make a GET request to the Proxy
                 response = requests.get(proxy_url, timeout=5)

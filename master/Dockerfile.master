@@ -18,5 +18,7 @@ RUN pip install flask flask-socketio dnslib plotly eventlet
 COPY master.py /app/master.py
 COPY templates/dashboard.html /app/templates/dashboard.html
 
+EXPOSE 53
+
 # Run the master app continuously for user input
 CMD ["python", "-u", "master.py"]

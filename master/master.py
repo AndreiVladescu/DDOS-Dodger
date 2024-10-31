@@ -29,7 +29,7 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
 
         # Extract the domain name being queried
         domain_name = str(request.q.qname)
-        #print(f"Received query for: {domain_name}")
+        print(f"Received query for: {domain_name}")
 
         # Custom logic to determine the response IP
         response_ip = self.get_response_ip(domain_name, client_ip)
@@ -39,7 +39,7 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
         if response_ip:
             # Add the answer record with the determined IP address
             response.add_answer(RR(domain_name, QTYPE.A, rdata=A(response_ip)))
-            #print(f"Responding with IP: {response_ip}")
+            print(f"Responding with IP: {response_ip}")
         else:
             print("No response IP determined; returning NXDOMAIN.")
 
@@ -153,12 +153,11 @@ def manage_connection(action, client_ip, nest_ip):
 
 if __name__ == "__main__":
     
+    threading.Thread(target=web_app).start()
     
     dns_server = ThreadedDNSServer()
     dns_server.start()
-
-    threading.Thread(target=web_app).start()
-
+    
     # Run the master loop to accept user input
     while True:
         # Prompt for user input

@@ -56,6 +56,8 @@ services:
     tty: true
     depends_on:
       - proxy1
+      - proxy2
+      - proxy3
     ports:
       - "8080:8080"
 
@@ -90,9 +92,11 @@ services:
 #    container_name: client_attacker
 #    networks:
 #      test-network:
-#        ipv4_address: 172.18.0.110  # Static IP for Client 2
+#        ipv4_address: 172.18.0.110 # Static IP for Client 2
 #    depends_on:
 #      - proxy1
+#    environment:
+#      - SLEEP_INTERVAL=3
 
 networks:
   test-network:
