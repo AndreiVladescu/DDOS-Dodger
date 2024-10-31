@@ -3,6 +3,10 @@ import random
 import socketserver
 import threading
 from dnslib import DNSRecord, QTYPE, RR, A
+import json
+from flask import Flask, render_template, jsonify
+
+app = Flask(__name__)
 
 # Static IPs of the Proxies
 PROXY_IPS = {'172.18.0.21', '172.18.0.22', '172.18.0.23' }
@@ -70,6 +74,19 @@ class ThreadedDNSServer:
         self.server.server_close()
         self.thread.join()
 
+### Web Application ###
+
+@app.route('/')
+def index():
+    return render_template('dashboard.html')
+
+@app.route('/connections')
+def get_connections():
+    return jsonify(connection_records)
+
+def web_app():
+    app.run(debug=True, use_reloader=False, port=8080, host='0.0.0.0')
+
 ### Proxy Server Communication ###
 
 # Function to send IP update to the proxy using TCP sockets
@@ -133,12 +150,14 @@ def manage_connection(action, client_ip, nest_ip):
     
     return 1
 
-if __name__ == "__main__":
-    # Create the DNS server instance
-    dns_server = ThreadedDNSServer()
 
-    # Start the DNS server in a separate thread
+if __name__ == "__main__":
+    
+    
+    dns_server = ThreadedDNSServer()
     dns_server.start()
+
+    threading.Thread(target=web_app).start()
 
     # Run the master loop to accept user input
     while True:

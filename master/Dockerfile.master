@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y \
     curl 
 
 # Install DNS server
-RUN pip install dnslib 
+RUN pip install flask flask-socketio dnslib plotly eventlet
 
 # Copy the master script to the container
 COPY master.py /app/master.py
+COPY templates/dashboard.html /app/templates/dashboard.html
 
 # Run the master app continuously for user input
 CMD ["python", "-u", "master.py"]

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DNS Server Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+
+<body>
+    <h1>DNS Connection Dashboard</h1>
+    <div id="connection_chart" style="width:100%;height:500px;"></div>
+
+    <script>
+        var connectionData = {};
+
+        function updateChart() {
+            var proxies = [];
+            var connections = [];
+            for (var key in connectionData) {
+                proxies.push(key);
+                connections.push(connectionData[key]);
+            }
+            var data = [{ x: proxies, y: connections, type: 'bar' }];
+            Plotly.newPlot('connection_chart', data, { title: 'Connections per Proxy' });
+        }
+
+        // Connect to SocketIO
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function () {
+            console.log("Connected to server");
+        });
+
+        socket.on('update_records', function (record) {
+            if (connectionData[record.proxy_ip]) {
+                connectionData[record.proxy_ip] += 1;
+            } else {
+                connectionData[record.proxy_ip] = 1;
+            }
+            updateChart();
+        });
+
+        // Fetch initial data
+        fetch('/connections')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(record => {
+                    if (connectionData[record.proxy_ip]) {
+                        connectionData[record.proxy_ip] += 1;
+                    } else {
+                        connectionData[record.proxy_ip] = 1;
+                    }
+                });
+                updateChart();
+            });
+    </script>
+</body>
+
+</html>
