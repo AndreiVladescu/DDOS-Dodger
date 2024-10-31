@@ -39,21 +39,21 @@ def send_request():
             # Query the DNS server for the Proxy's IP address
             proxy_ip = query_dns_server("city.iot.gov", "172.18.0.10", 53)
             print(f"Server IP address received from DNS: {proxy_ip}")
+            proxy_url = f"http://{proxy_ip}:5000/"
         except Exception as e:
             print(f"Error querying DNS server: {e}")
             continue
-
-        try:
-            proxy_url = f"http://{proxy_ip}:5000/"
-            # Make a GET request to the Proxy
-            response = requests.get(proxy_url, timeout=5)
-            print(f"Response from Proxy: {response.status_code} - {response.text}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error connecting to Proxy: {e}")
-        
-        print('Cycle completed')
-        # Wait for 5 seconds before making the next request
-        time.sleep(5)
+        while True:
+            try:
+                # Make a GET request to the Proxy
+                response = requests.get(proxy_url, timeout=5)
+                print(f"Response from Proxy: {response.status_code} - {response.text}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error connecting to Proxy: {e}")
+            
+            print('Cycle completed')
+            # Wait for 5 seconds before making the next request
+            time.sleep(5)
 
 if __name__ == "__main__":
     send_request()

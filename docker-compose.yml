@@ -1,17 +1,47 @@
 services:
-  proxy:
+  proxy1:
     build:
       context: ./proxy
       dockerfile: Dockerfile.proxy
-    container_name: proxy
+    container_name: proxy1
     networks:
       test-network:
-        ipv4_address: 172.18.0.20 # Static IP for the Proxy
+        ipv4_address: 172.18.0.21 # Static IP for Proxy1
     expose:
       - "6000"
     ports:
-      - "6001:6000"
-    privileged: true # Ensure iptables can run
+      - "6001:6000" # Map port 6000 in the container to 6001 on the host for proxy1
+    privileged: true
+    command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
+
+  proxy2:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.proxy
+    container_name: proxy2
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.22 # Static IP for Proxy2
+    expose:
+      - "6000"
+    ports:
+      - "6002:6000" # Map port 6000 in the container to 6002 on the host for proxy2
+    privileged: true
+    command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
+
+  proxy3:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.proxy
+    container_name: proxy3
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.23 # Static IP for Proxy3
+    expose:
+      - "6000"
+    ports:
+      - "6003:6000" # Map port 6000 in the container to 6003 on the host for proxy3
+    privileged: true
     command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
 
   master:
@@ -25,7 +55,7 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - proxy
+      - proxy1
 
   nest:
     build:
@@ -49,7 +79,7 @@ services:
       test-network:
         ipv4_address: 172.18.0.100 # Static IP for Client 1
     depends_on:
-      - proxy
+      - proxy1
 
 #  client_attacker:
 #    build:
@@ -60,7 +90,7 @@ services:
 #      test-network:
 #        ipv4_address: 172.18.0.110  # Static IP for Client 2
 #    depends_on:
-#      - proxy
+#      - proxy1
 
 networks:
   test-network:

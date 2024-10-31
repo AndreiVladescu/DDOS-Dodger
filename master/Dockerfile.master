@@ -16,7 +16,6 @@ RUN pip install dnslib
 
 # Copy the master script to the container
 COPY master.py /app/master.py
-COPY dns_server.py /app/dns_server.py
 
 # Run the master app continuously for user input
 CMD ["python", "-u", "master.py"]
