@@ -1,9 +1,13 @@
 import socket
 import random
+import socketserver
+import threading
+from dns_server import ThreadedDNSServer
 
-# Static IP of the Proxy (assuming the Proxy's static IP is 172.18.0.20)
+# Static IP of the Proxy
 PROXY_IP = '172.18.0.20'
-PROXY_PORT = 6000  # The port where the Proxy listens for socket connections
+# The port where the Proxy listens for socket connections
+PROXY_PORT = 6000  
 
 # Data structure to keep track of client-server-proxy connections
 connection_records = []
@@ -58,6 +62,12 @@ if __name__ == "__main__":
     # Load default rules into the Proxy
     # load_default_rules()
 
+    # Create the DNS server instance
+    dns_server = ThreadedDNSServer()
+
+    # Start the DNS server in a separate thread
+    dns_server.start()
+
     # Run the master loop to accept user input
     while True:
         # Prompt for user input
@@ -87,3 +97,6 @@ if __name__ == "__main__":
         
         except ValueError:
             print("Invalid input format. Please enter: <action> <client_ip> <server_ip>")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            dns_server.stop()

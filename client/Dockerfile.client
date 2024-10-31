@@ -11,11 +11,14 @@ RUN apt-get update && apt-get install -y \
     iproute2 \
     curl 
 
-# Install the required dependencies (requests library)
-RUN pip install requests
+# Install the required dependencies
+RUN pip install requests dnslib
 
 # Copy the requester.py script to the container
 COPY client.py /app/client.py
+
+# Expose port 53 for DNS queries
+EXPOSE 53/udp
 
 # Set the default command to run the requester script
 CMD ["python","-u", "client.py"]

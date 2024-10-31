@@ -1,12 +1,50 @@
 import time
 import requests
+from dnslib import DNSRecord
+import socket
 
-proxy_url = "http://172.18.0.20:5000/"  # Use the Proxy container name as its DNS
+proxy_url = None
+proxy_ip = None
+
+def query_dns_server(domain, server_ip, port=53):
+    # Construct a DNS query packet
+    dns_query = DNSRecord.question(domain)
+
+    # Send the DNS query to the server
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.settimeout(2)  # Set a timeout for the response
+        sock.sendto(dns_query.pack(), (server_ip, port))
+
+        # Receive the response from the server
+        try:
+            data, _ = sock.recvfrom(512)  # 512 bytes is typical for DNS responses
+            dns_response = DNSRecord.parse(data)
+
+            # Print the answers section of the DNS response
+            for answer in dns_response.rr:
+                return answer.rdata  # Return the IP address found in the response
+        except socket.timeout:
+            print("Request timed out.")
+            return None
+
 
 def send_request():
+    global proxy_ip
+    global proxy_url
+
     print("Starting the client...")
     while True:
+
         try:
+            # Query the DNS server for the Proxy's IP address
+            proxy_ip = query_dns_server("city.iot.gov", "172.18.0.10", 53)
+            print(f"Server IP address received from DNS: {proxy_ip}")
+        except Exception as e:
+            print(f"Error querying DNS server: {e}")
+            continue
+
+        try:
+            proxy_url = f"http://{proxy_ip}:5000/"
             # Make a GET request to the Proxy
             response = requests.get(proxy_url, timeout=5)
             print(f"Response from Proxy: {response.status_code} - {response.text}")
