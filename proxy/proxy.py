@@ -11,11 +11,6 @@ def get_proxy_ip():
 
 # Function to set up nftables with default drop policy and NAT configuration
 def setup_nftables():
-    client_ip = "172.18.0.100"
-    server_ip = "172.18.0.30"
-    proxy_ip = get_proxy_ip()
-    master_ip = "172.18.0.10"
-
     # Add NAT table
     os.system("nft add table ip nat")
 
@@ -24,22 +19,6 @@ def setup_nftables():
 
     # Add postrouting chain (for outgoing NAT)
     os.system("nft add chain ip nat postrouting { type nat hook postrouting priority 100 \\; }")
-
-    # DNAT: Matches any traffic aimed at the proxy’s IP on port 5000 
-    # Redirects this traffic to the server IP, allowing the proxy to forward requests from the client to the server.
-    #os.system(f"nft add rule ip nat prerouting iifname eth0 ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 5000 dnat to {server_ip}")
-
-    # SNAT: Modify source IP for traffic coming from the client to make it appear as though it's coming from the proxy
-    #os.system(f"nft add rule ip nat postrouting oifname eth0 ip saddr {client_ip} ip daddr {server_ip} snat to {proxy_ip}")
-
-    # Create an inet filter table for filtering (optional, depending on your filtering needs)
-    # os.system("nft add table inet filter")
-
-    # Add input chain to filter traffic (policy drop by default)
-    #os.system("nft add chain inet filter input { type filter hook input priority 0 \\; policy drop \\; }")
-
-    # Allow only master to access port 6000 on the gateway
-    #os.system(f"nft add rule inet filter input ip saddr {master_ip} tcp dport 6000 accept")
 
     print("nftables initialized with default rules.")
 
@@ -113,7 +92,6 @@ def start_tcp_server():
                     # Remove the IP pair from the allowed list
                     allowed_pairs.remove((client_ip, nest_ip))
                     client_socket.sendall(b"IP pair removed.\n")
-
                 else:
                     client_socket.sendall(b"Invalid action.\n")
 
