@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     traceroute \
     && rm -rf /var/lib/apt/lists/*
 
+# Install scapy
+RUN pip install scapy
+
 # Copy the proxy script
 COPY proxy.py /app/proxy.py
 

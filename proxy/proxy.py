@@ -1,9 +1,22 @@
 import os
 import socket
+from scapy.all import sniff
+from collections import defaultdict
+import time
+import threading
 
 # List of allowed IP pairs: (Source IP, Destination IP/Name)
 allowed_pairs = []
 proxy_ip = None
+
+# Threshold for packet count
+PACKET_THRESHOLD = 5
+
+# Packet dictionary for each client IP
+packet_counts = defaultdict(int)
+
+# Interface for sniffing packets
+INTERFACE = "eth0"
 
 # Get the Proxy container's IP address
 def get_proxy_ip():
@@ -47,6 +60,23 @@ def revoke_access_rule(client_ip, nest_ip):
     os.system(f"nft delete rule nat postrouting handle $(nft --handle list ruleset | egrep 'oifname \"eth0\" ip saddr {client_ip} ip daddr {nest_ip} snat to {proxy_ip}' | rev | cut -d' ' -f1 | rev)")
 
     print(f"Revoked NAT rules: {client_ip} -> {nest_ip}")
+
+# Function to analyze each packet
+def packet_handler(packet):
+    if packet.haslayer("IP"):  # Check if the packet has an IP layer
+        src_ip = packet["IP"].src
+        
+        # Increment packet count for this client IP
+        packet_counts[src_ip] += 1
+
+        # Check if the packet count exceeds the threshold
+        if packet_counts[src_ip] > PACKET_THRESHOLD:
+            print(f"[ALERT] Potential DOS detected from {src_ip}. Packet count: {packet_counts[src_ip]}")
+            # Take further action if desired, such as logging or alerting
+            # You can also reset the count for this IP if necessary
+
+def packet_counting_thread_func():
+    sniff(iface=INTERFACE, prn=packet_handler, store=False)
 
 # TCP server to listen for updates from the master
 def start_tcp_server():
@@ -96,6 +126,11 @@ def start_tcp_server():
                     client_socket.sendall(b"Invalid action.\n")
 
 if __name__ == "__main__":
+
+    # Starting Scapy sniffing
+    threading.Thread(target=packet_counting_thread_func).start()
+    
+    
     # Setup initial nftables rules
     setup_nftables()
 
