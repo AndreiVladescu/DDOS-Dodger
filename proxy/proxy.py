@@ -2,8 +2,11 @@ import os
 import socket
 from scapy.all import sniff
 from collections import defaultdict
+import paho.mqtt.client as mqtt
 import time
 import threading
+import json
+from time import sleep
 
 # List of allowed IP pairs: (Source IP, Destination IP/Name)
 allowed_pairs = []
@@ -20,6 +23,13 @@ packet_counts = defaultdict(int)
 
 # Interface for sniffing packets
 INTERFACE = "eth0"
+
+# MQTT Broker details
+MQTT_BROKER = "172.18.0.60"
+MQTT_PORT = 1883
+MQTT_TOPIC_COMMAND = "proxy/command"
+MQTT_TOPIC_RESPONSE = "proxy/response"
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 # Get the Proxy container's IP address
 def get_proxy_ip():
@@ -88,60 +98,66 @@ def packet_handler(packet):
 def packet_counting_thread_func():
     sniff(iface=INTERFACE, prn=packet_handler, store=False)
 
-# TCP server to listen for updates from the master
-def start_tcp_server():
+# MQTT message handler
+def on_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode())
+
+        received_proxy_ip = payload.get("proxy_ip")
+        if received_proxy_ip != proxy_ip:
+            return
+        
+        action = payload.get("action")
+        client_ip = payload.get("client_ip")
+        nest_ip = payload.get("nest_ip")
+
+        if action == "allow":
+            print(f"Received allow command for {client_ip} -> {nest_ip}")
+            if add_access_rule(client_ip, nest_ip):
+                response = {"proxy_ip": proxy_ip, "action": "allowed", "client_ip": client_ip}
+            else:
+                response = {"proxy_ip": proxy_ip, "action": "already_allowed", "client_ip": client_ip}
+
+        elif action == "deny":
+            print(f"Received deny command for {client_ip} -> {nest_ip}")
+            if (client_ip, nest_ip) in allowed_pairs:
+                revoke_access_rule(client_ip, nest_ip)
+                allowed_pairs.remove((client_ip, nest_ip))
+                response = {"proxy_ip": proxy_ip, "action": "revoked", "client_ip": client_ip}
+            else:
+                response = {"proxy_ip": proxy_ip, "action": "not_found", "client_ip": client_ip}
+
+        # Publish the response to the response topic
+        mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps(response))
+    except Exception as e:
+        print(f"Error processing message: {e}")
+
+def on_connect(client, userdata, flags, rc, properties):
+        if rc == 0:
+            print("Connected to MQTT broker.")
+            client.subscribe(MQTT_TOPIC_COMMAND)
+            print(f"Subscribed to topic {MQTT_TOPIC_COMMAND}")  # Debugging
+        else:
+            print(f"Failed to connect to MQTT broker with code {rc}")
+
+def setup_mqtt():
     global proxy_ip
-
-    # Define server address and port
-    host = '0.0.0.0'
-    port = 6000         # Custom port for the Master comms
-
     proxy_ip = get_proxy_ip()
-    # Create the TCP server socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((host, port))
-        server_socket.listen()
 
-        print(f"Proxy TCP server listening on {host}:{port}")
-
-        while True:
-            # Wait for a connection from the master
-            client_socket, addr = server_socket.accept()
-            with client_socket:
-                print(f"Connected by {addr}")
-                
-                # Receive the message from the master
-                data = client_socket.recv(1024).decode()
-                if not data:
-                    break
-                
-                # The message should be in the format "allow <source_ip> <dest_ip>"
-                action, client_ip, nest_ip = data.split()
-
-                print(f"Received command: {action} for {client_ip} -> {nest_ip}")
-
-                if action == "allow":
-                    if add_access_rule(client_ip, nest_ip):
-                        client_socket.sendall(b"IP pair allowed.\n")
-                    else:
-                        client_socket.sendall(b"IP pair already allowed.\n")
-
-                elif action == "deny":
-                    revoke_access_rule(client_ip, nest_ip)
-                    
-                    # Remove the IP pair from the allowed list
-                    allowed_pairs.remove((client_ip, nest_ip))
-                    client_socket.sendall(b"IP pair removed.\n")
-                else:
-                    client_socket.sendall(b"Invalid action.\n")
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
+    print(f"Proxy service running at {proxy_ip}")
 
 if __name__ == "__main__":
 
+    sleep(5)
     # Starting Scapy sniffing
     threading.Thread(target=packet_counting_thread_func).start()
     
     # Setup initial nftables rules
     setup_nftables()
 
-    # Start the TCP server to listen for updates from the master
-    start_tcp_server()
+    # Start MQTT communication
+    setup_mqtt()
+    mqtt_client.loop_forever(retry_first_connection=True)

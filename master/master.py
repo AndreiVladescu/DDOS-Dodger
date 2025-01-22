@@ -5,6 +5,8 @@ import threading
 from dnslib import DNSRecord, QTYPE, RR, A
 import json
 from flask import Flask, render_template, jsonify
+import paho.mqtt.client as mqtt
+from time import sleep
 
 app = Flask(__name__)
 
@@ -15,6 +17,18 @@ PROXY_PORT = 6000
 
 # Data structure to keep track of client-server-proxy connections
 connection_records = []
+
+# MQTT Broker details
+MQTT_BROKER = "172.18.0.60"
+MQTT_PORT = 1883
+MQTT_TOPIC_COMMAND = "proxy/command"
+MQTT_TOPIC_RESPONSE = "proxy/response"
+
+# Data structure to keep track of client-server-proxy connections
+connection_records = []
+
+# MQTT client
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 ### DNS Server Communication ###
 
@@ -111,68 +125,113 @@ def update_proxy(action, client_ip, server_ip, proxy_ip):
         print(f"Error while communicating with Proxy: {e}")
         return -1
 
+def on_connect(client, userdata, flags, rc, properties):
+    if rc == 0:
+        print("Connected to MQTT broker.")
+        # Subscribe to the response topic
+        client.subscribe(MQTT_TOPIC_RESPONSE)
+    else:
+        print(f"Failed to connect, return code {rc}")
+
+def on_message(client, userdata, msg):
+    try:
+        # Parse incoming MQTT messages
+        payload = json.loads(msg.payload.decode())
+        if msg.topic == MQTT_TOPIC_RESPONSE:
+            print(f"Response received: {payload}")
+            handle_proxy_response(payload)
+    except Exception as e:
+        print(f"Error processing message: {e}")
+
+def handle_proxy_response(response):
+    # Handle responses from proxies, e.g., updating connection records
+    client_ip = response.get("client_ip")
+    action = response.get("action")
+    print(f"Proxy {response.get('proxy_ip')} reports {action} for {client_ip}")
+
 # Function to manage the connection (either allow or deny)
 def manage_connection(action, client_ip, nest_ip):
-    random_proxy_ip = random.choice(list(PROXY_IPS))
+    # Check if the action is valid
+    if action not in ["allow", "deny"]:
+        raise ValueError("Invalid action. Must be 'allow' or 'deny'.")
+
+    # Check if the client_ip is already recorded
+    existing_record = next((record for record in connection_records if record["client_ip"] == client_ip and record["nest_ip"] == nest_ip), None)
 
     if action == "allow":
-        is_client_ip_present = any(record["client_ip"] == 
-                                   client_ip for record in connection_records)
-        if is_client_ip_present:
-            print(f"Client IP {client_ip} is already in the records.")
-            proxy_ip = next((record["proxy_ip"] for record in connection_records if record["client_ip"] == client_ip), None)
-            return 0, proxy_ip
-
-        rc = update_proxy(action, client_ip, nest_ip, random_proxy_ip)
-        if rc == -1:
-            print("Error updating proxy. Aborting.")
+        if existing_record:
+            print(f"Connection already exists: {existing_record}")
             return -1
-        elif rc == 0:
-            print("IP pair already allowed. Updating it to our connection.")
-        elif rc == 1:
-            print("IP pair allowed successfully.")
-            
-        # If the update is error-free, add the connection to the records
+
+        # Pick a random proxy IP from the list of available proxies
+        proxy_ip = random.choice(list(PROXY_IPS))
+
+        # Add the new connection to the records
         connection_records.append({
             "client_ip": client_ip,
-            "proxy_ip": random_proxy_ip,
+            "proxy_ip": proxy_ip,
             "nest_ip": nest_ip
         })
 
-        return 1, random_proxy_ip
+        # Publish the 'allow' command to the selected proxy
+        message = {
+            "action": "allow",
+            "client_ip": client_ip,
+            "nest_ip": nest_ip,
+            "proxy_ip": proxy_ip
+        }
+        mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
+        print(f"Published 'allow' command to {proxy_ip} for {client_ip} -> {nest_ip}")
 
-    elif action == "deny":
-        # Find and remove the connection record for the client-nest pair
-        connection_records[:] = [record for record in connection_records 
-                                 if not (record['client_ip'] == client_ip and record['nest_ip'] == nest_ip)]
-        # Send deny request to Proxy
-        rc = update_proxy(action, client_ip, nest_ip, record['proxy_ip'])
+        return 0, proxy_ip
     
-    return 1
+    elif action == "deny":
+        if not existing_record:
+            print(f"No existing connection for {client_ip} -> {nest_ip}. Nothing to deny.")
+            return -1
 
+        proxy_ip = existing_record["proxy_ip"]
+
+        # Remove the connection from the records
+        connection_records.remove(existing_record)
+
+        # Publish the 'deny' command to the appropriate proxy
+        message = {
+            "action": "deny",
+            "client_ip": client_ip,
+            "nest_ip": nest_ip,
+            "proxy_ip": proxy_ip
+        }
+        mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
+        print(f"Published 'deny' command to {proxy_ip} for {client_ip} -> {nest_ip}")
+
+
+def setup_mqtt():
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
+    mqtt_client.loop_start()
 
 if __name__ == "__main__":
-    
-    threading.Thread(target=web_app).start()
+    sleep(5)
     
     dns_server = ThreadedDNSServer()
     dns_server.start()
-    
-    # Run the master loop to accept user input
+
+    threading.Thread(target=web_app).start()
+
+    setup_mqtt()
+
     while True:
-        # Prompt for user input
         user_input = input("\nEnter action (allow/deny) client_ip nest_ip: ")
         
-        # Exit the loop if the user types 'exit'
         if user_input.lower() == 'exit':
             print("Exiting program.")
             break
         
         try:
-            # Split input into components
             action, client_ip, nest_ip = user_input.split()
 
-            # Validate the action
             if action not in ["allow", "deny"]:
                 print("Invalid action. Please use 'allow' or 'deny'.")
                 continue
@@ -180,7 +239,6 @@ if __name__ == "__main__":
             # Manage the connection based on user input
             manage_connection(action, client_ip, nest_ip)
 
-            # Print the updated connection records
             print("\nCurrent Connections:")
             for record in connection_records:
                 print(f"Client: {record['client_ip']} -> Proxy: {record['proxy_ip']} -> Nest: {record['nest_ip']}")

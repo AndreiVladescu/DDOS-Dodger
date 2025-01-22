@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     curl 
 
 # Install DNS server
-RUN pip install flask flask-socketio dnslib plotly eventlet
+RUN pip install flask flask-socketio dnslib plotly eventlet paho-mqtt
 
 # Copy the master script to the container
 COPY master.py /app/master.py
