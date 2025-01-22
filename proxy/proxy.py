@@ -13,7 +13,7 @@ allowed_pairs = []
 proxy_ip = None
 
 # Threshold for packet count
-PACKET_THRESHOLD = 20
+PACKET_THRESHOLD = 5
 
 # IPs that are internal
 ignored_ips = {"172.18.0.10", "172.18.0.30"}
@@ -92,7 +92,9 @@ def packet_handler(packet):
             
             # Check if the packet count exceeds the threshold
             if packet_counts[src_ip] > PACKET_THRESHOLD:
-                print(f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}")
+                message = f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}"
+                print(message)
+                mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({"proxy_ip": proxy_ip, "action": "alert", "client_ip": src_ip, "message": message}))
                 # Take further action if desired, such as logging or blocking the source
 
 def packet_counting_thread_func():
