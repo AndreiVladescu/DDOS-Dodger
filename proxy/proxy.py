@@ -57,7 +57,7 @@ def add_access_rule(client_ip, nest_ip):
 # Function to remove a specific IP rule from nftables
 def revoke_access_rule(client_ip, nest_ip):
     # Find and delete DNAT rule
-    os.system(f"nft delete rule nat prerouting handle $( nft --handle list ruleset | egrep 'iifname \"eth0\" ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 5000 dnat to {nest_ip}' | rev | cut -d' ' -f1 | rev)")
+    os.system(f"nft delete rule nat prerouting handle $(nft --handle list ruleset | egrep 'iifname \"eth0\" ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 5000 dnat to {nest_ip}' | rev | cut -d' ' -f1 | rev)")
 
     # Find and delete SNAT rule
     os.system(f"nft delete rule nat postrouting handle $(nft --handle list ruleset | egrep 'oifname \"eth0\" ip saddr {client_ip} ip daddr {nest_ip} snat to {proxy_ip}' | rev | cut -d' ' -f1 | rev)")
@@ -70,6 +70,11 @@ def packet_handler(packet):
         src_ip = packet["IP"].src
         tcp_layer = packet["TCP"]
 
+        if src_ip in ignored_ips:
+            return
+        if src_ip == proxy_ip:
+            return
+        
         # Check if the packet is a SYN packet
         if tcp_layer.flags == "S":  # SYN flag
             # Increment packet count for this client IP
