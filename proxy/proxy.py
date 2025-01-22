@@ -10,7 +10,10 @@ allowed_pairs = []
 proxy_ip = None
 
 # Threshold for packet count
-PACKET_THRESHOLD = 5
+PACKET_THRESHOLD = 20
+
+# IPs that are internal
+ignored_ips = {"172.18.0.10", "172.18.0.30"}
 
 # Packet dictionary for each client IP
 packet_counts = defaultdict(int)
@@ -63,17 +66,19 @@ def revoke_access_rule(client_ip, nest_ip):
 
 # Function to analyze each packet
 def packet_handler(packet):
-    if packet.haslayer("IP"):  # Check if the packet has an IP layer
+    if packet.haslayer("IP") and packet.haslayer("TCP"):
         src_ip = packet["IP"].src
-        
-        # Increment packet count for this client IP
-        packet_counts[src_ip] += 1
+        tcp_layer = packet["TCP"]
 
-        # Check if the packet count exceeds the threshold
-        if packet_counts[src_ip] > PACKET_THRESHOLD:
-            print(f"[ALERT] Potential DOS detected from {src_ip}. Packet count: {packet_counts[src_ip]}")
-            # Take further action if desired, such as logging or alerting
-            # You can also reset the count for this IP if necessary
+        # Check if the packet is a SYN packet
+        if tcp_layer.flags == "S":  # SYN flag
+            # Increment packet count for this client IP
+            packet_counts[src_ip] += 1
+            
+            # Check if the packet count exceeds the threshold
+            if packet_counts[src_ip] > PACKET_THRESHOLD:
+                print(f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}")
+                # Take further action if desired, such as logging or blocking the source
 
 def packet_counting_thread_func():
     sniff(iface=INTERFACE, prn=packet_handler, store=False)
@@ -83,8 +88,8 @@ def start_tcp_server():
     global proxy_ip
 
     # Define server address and port
-    host = '0.0.0.0'  # Listen on all available network interfaces
-    port = 6000        # Custom port for the Master comms
+    host = '0.0.0.0'
+    port = 6000         # Custom port for the Master comms
 
     proxy_ip = get_proxy_ip()
     # Create the TCP server socket
@@ -129,7 +134,6 @@ if __name__ == "__main__":
 
     # Starting Scapy sniffing
     threading.Thread(target=packet_counting_thread_func).start()
-    
     
     # Setup initial nftables rules
     setup_nftables()

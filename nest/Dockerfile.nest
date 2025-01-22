@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
 
 # Install Flask
 RUN pip install flask 
-# Copy the requirements if there are any (optional)
 # COPY requirements.txt ./
 # RUN pip install -r requirements.txt
 
