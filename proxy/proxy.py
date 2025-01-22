@@ -76,27 +76,25 @@ def revoke_access_rule(client_ip, nest_ip):
 
 # Function to analyze each packet
 def packet_handler(packet):
-    if packet.haslayer("IP") and packet.haslayer("TCP"):
+    if packet.haslayer("IP"):
         src_ip = packet["IP"].src
-        tcp_layer = packet["TCP"]
 
-        if src_ip in ignored_ips:
+        # Ignore internal or proxy IPs
+        if src_ip in ignored_ips or src_ip == proxy_ip:
             return
-        if src_ip == proxy_ip:
-            return
-        
-        # Check if the packet is a SYN packet
-        if tcp_layer.flags == "S":  # SYN flag
-            # Increment packet count for this client IP
+
+        # SYN Flood Detection
+        if packet.haslayer("TCP") and packet["TCP"].flags == "S":  # SYN flag
             packet_counts[src_ip] += 1
-            
-            # Check if the packet count exceeds the threshold
             if packet_counts[src_ip] > PACKET_THRESHOLD:
-                message = f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}"
-                print(message)
-                mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({"proxy_ip": proxy_ip, "action": "alert", "client_ip": src_ip, "message": message}))
-                # Take further action if desired, such as logging or blocking the source
+                print(f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}")
 
+        # UDP Flood Detection
+        elif packet.haslayer("UDP"):
+            packet_counts[src_ip] += 1
+            if packet_counts[src_ip] > PACKET_THRESHOLD:
+                print(f"[ALERT] Potential UDP flood detected from {src_ip}. UDP count: {packet_counts[src_ip]}")
+                
 def packet_counting_thread_func():
     sniff(iface=INTERFACE, prn=packet_handler, store=False)
 
