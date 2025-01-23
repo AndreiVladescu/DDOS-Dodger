@@ -24,8 +24,7 @@ MQTT_PORT = 1883
 MQTT_TOPIC_COMMAND = "proxy/command"
 MQTT_TOPIC_RESPONSE = "proxy/response"
 
-# Data structure to keep track of client-server-proxy connections
-connection_records = []
+blacklist = []
 
 # MQTT client
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -65,9 +64,11 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
         # Custom logic for different domains or subdomains
         if "city.iot.gov" in domain_name:
             rc, proxy_ip = manage_connection(action="allow", client_ip=client_ip, nest_ip="172.18.0.30")
-            if rc != -1 :
+            if rc == 0 :
                 return proxy_ip
-            else:
+            elif rc == -1:
+                return "0.0.0.0"
+            elif rc == -2:
                 return "0.0.0.0"
         else:
             return "0.0.0.0"  # Define fallback IP, or None for NXDOMAIN
@@ -155,16 +156,20 @@ def handle_proxy_response(response):
         print(f"Revoking access for client {client_ip}")
         manage_connection("revoke", client_ip, nest_ip)
 
-# Function to manage the connection (either allow or revoke)
+# Function to manage the connection
 def manage_connection(action, client_ip, nest_ip):
     # Check if the action is valid
-    if action not in ["allow", "revoke"]:
-        raise ValueError("Invalid action. Must be 'allow' or 'revoke'.")
+    if action not in ["allow", "revoke", "deny"]:
+        raise ValueError("Invalid action. Must be 'allow', 'revoke' or 'deny'.")
 
     # Check if the client_ip is already recorded
     existing_record = next((record for record in connection_records if record["client_ip"] == client_ip and record["nest_ip"] == nest_ip), None)
 
     if action == "allow":
+        if client_ip in blacklist:
+            print(f"Client {client_ip} is in the blacklist. Access denied.")
+            return -2
+
         if existing_record:
             print(f"Connection already exists: {existing_record}")
             proxy_ip = existing_record["proxy_ip"]
@@ -211,7 +216,10 @@ def manage_connection(action, client_ip, nest_ip):
         }
         mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
         print(f"Published 'revoke' command to {proxy_ip} for {client_ip} -> {nest_ip}")
-
+    elif action == "deny":
+        blacklist.append(client_ip)
+        print(f"Client {client_ip} added to blacklist")
+        return 0
 
 def setup_mqtt():
     mqtt_client.on_connect = on_connect
@@ -230,7 +238,7 @@ if __name__ == "__main__":
     setup_mqtt()
 
     while True:
-        user_input = input("\nEnter action (allow/revoke) client_ip nest_ip: ")
+        user_input = input("\nEnter action (allow/revoke/deny) client_ip nest_ip: ")
         
         if user_input.lower() == 'exit':
             print("Exiting program.")
@@ -239,8 +247,8 @@ if __name__ == "__main__":
         try:
             action, client_ip, nest_ip = user_input.split()
 
-            if action not in ["allow", "revoke"]:
-                print("Invalid action. Please use 'allow' or 'revoke'.")
+            if action not in ["allow", "revoke", "deny"]:
+                print("Invalid action. Please use 'allow', 'revoke' or 'deny'.")
                 continue
 
             # Manage the connection based on user input
@@ -251,7 +259,7 @@ if __name__ == "__main__":
                 print(f"Client: {record['client_ip']} -> Proxy: {record['proxy_ip']} -> Nest: {record['nest_ip']}")
         
         except ValueError:
-            print("Invalid input format. Please enter: (allow/revoke) <client_ip> <nest_ip>")
+            print("Invalid input format. Please enter: (allow/revoke/deny) <client_ip> <nest_ip>")
         except Exception as e:
             print(f"An error occurred: {e}")
             dns_server.stop()
