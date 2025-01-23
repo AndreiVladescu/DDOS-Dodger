@@ -116,7 +116,7 @@ def packet_handler(packet):
                 mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
                     "proxy_ip": proxy_ip,
                     "nest_ip": nest_ip,
-                    "action": "alert-deny",
+                    "action": "alert-revoke",
                     "client_ip": src_ip,
                     "message": message
                 }))
@@ -131,7 +131,7 @@ def packet_handler(packet):
                 mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
                     "proxy_ip": proxy_ip,
                     "nest_ip": nest_ip,
-                    "action": "alert-deny",
+                    "action": "alert-revoke",
                     "client_ip": src_ip,
                     "message": message
                 }))
@@ -169,8 +169,8 @@ def on_message(client, userdata, msg):
                             "nest_ip": nest_ip, 
                             "proxy_ip": proxy_ip}
 
-        elif action == "deny":
-            print(f"Received deny command for {client_ip} -> {nest_ip}")
+        elif action == "revoke":
+            print(f"Received revoke command for {client_ip} -> {nest_ip}")
             if (client_ip, nest_ip) in allowed_pairs:
                 revoke_access_rule(client_ip, nest_ip)
                 allowed_pairs.remove((client_ip, nest_ip))

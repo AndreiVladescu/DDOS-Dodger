@@ -151,15 +151,15 @@ def handle_proxy_response(response):
     nest_ip = response.get("nest_ip")
     print(f"Proxy {response.get('proxy_ip')} reports {action} for {client_ip} while accessing {nest_ip}")
     # Make a switch case for different actions
-    if (action == "alert-deny"):
+    if (action == "alert-revoke"):
         print(f"Revoking access for client {client_ip}")
-        manage_connection("deny", client_ip, nest_ip)
+        manage_connection("revoke", client_ip, nest_ip)
 
-# Function to manage the connection (either allow or deny)
+# Function to manage the connection (either allow or revoke)
 def manage_connection(action, client_ip, nest_ip):
     # Check if the action is valid
-    if action not in ["allow", "deny"]:
-        raise ValueError("Invalid action. Must be 'allow' or 'deny'.")
+    if action not in ["allow", "revoke"]:
+        raise ValueError("Invalid action. Must be 'allow' or 'revoke'.")
 
     # Check if the client_ip is already recorded
     existing_record = next((record for record in connection_records if record["client_ip"] == client_ip and record["nest_ip"] == nest_ip), None)
@@ -192,9 +192,9 @@ def manage_connection(action, client_ip, nest_ip):
 
         return 0, proxy_ip
     
-    elif action == "deny":
+    elif action == "revoke":
         if not existing_record:
-            print(f"No existing connection for {client_ip} -> {nest_ip}. Nothing to deny.")
+            print(f"No existing connection for {client_ip} -> {nest_ip}. Nothing to revoke.")
             return -1
 
         proxy_ip = existing_record["proxy_ip"]
@@ -202,15 +202,15 @@ def manage_connection(action, client_ip, nest_ip):
         # Remove the connection from the records
         connection_records.remove(existing_record)
 
-        # Publish the 'deny' command to the appropriate proxy
+        # Publish the 'revoke' command to the appropriate proxy
         message = {
-            "action": "deny",
+            "action": "revoke",
             "client_ip": client_ip,
             "nest_ip": nest_ip,
             "proxy_ip": proxy_ip
         }
         mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
-        print(f"Published 'deny' command to {proxy_ip} for {client_ip} -> {nest_ip}")
+        print(f"Published 'revoke' command to {proxy_ip} for {client_ip} -> {nest_ip}")
 
 
 def setup_mqtt():
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     setup_mqtt()
 
     while True:
-        user_input = input("\nEnter action (allow/deny) client_ip nest_ip: ")
+        user_input = input("\nEnter action (allow/revoke) client_ip nest_ip: ")
         
         if user_input.lower() == 'exit':
             print("Exiting program.")
@@ -239,8 +239,8 @@ if __name__ == "__main__":
         try:
             action, client_ip, nest_ip = user_input.split()
 
-            if action not in ["allow", "deny"]:
-                print("Invalid action. Please use 'allow' or 'deny'.")
+            if action not in ["allow", "revoke"]:
+                print("Invalid action. Please use 'allow' or 'revoke'.")
                 continue
 
             # Manage the connection based on user input
@@ -251,7 +251,7 @@ if __name__ == "__main__":
                 print(f"Client: {record['client_ip']} -> Proxy: {record['proxy_ip']} -> Nest: {record['nest_ip']}")
         
         except ValueError:
-            print("Invalid input format. Please enter: (allow/deny) <client_ip> <nest_ip>")
+            print("Invalid input format. Please enter: (allow/revoke) <client_ip> <nest_ip>")
         except Exception as e:
             print(f"An error occurred: {e}")
             dns_server.stop()
