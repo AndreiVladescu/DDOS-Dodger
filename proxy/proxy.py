@@ -116,7 +116,7 @@ def packet_handler(packet):
                 mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
                     "proxy_ip": proxy_ip,
                     "nest_ip": nest_ip,
-                    "action": "alert",
+                    "action": "alert-deny",
                     "client_ip": src_ip,
                     "message": message
                 }))
@@ -131,7 +131,7 @@ def packet_handler(packet):
                 mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
                     "proxy_ip": proxy_ip,
                     "nest_ip": nest_ip,
-                    "action": "alert",
+                    "action": "alert-deny",
                     "client_ip": src_ip,
                     "message": message
                 }))

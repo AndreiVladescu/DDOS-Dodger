@@ -43,7 +43,7 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
 
         # Extract the domain name being queried
         domain_name = str(request.q.qname)
-        print(f"Received query for: {domain_name}")
+        print(f"DNS Server received query for: {domain_name}")
 
         # Custom logic to determine the response IP
         response_ip = self.get_response_ip(domain_name, client_ip)
@@ -53,8 +53,9 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
         if response_ip:
             # Add the answer record with the determined IP address
             response.add_answer(RR(domain_name, QTYPE.A, rdata=A(response_ip)))
-            print(f"Responding with IP: {response_ip}")
+            print(f"DNS Server responding with IP: {response_ip}")
         else:
+            response.add_answer(RR(domain_name, QTYPE.NXDOMAIN))
             print("No response IP determined; returning NXDOMAIN.")
 
         # Send the response back to the client
@@ -150,8 +151,9 @@ def handle_proxy_response(response):
     nest_ip = response.get("nest_ip")
     print(f"Proxy {response.get('proxy_ip')} reports {action} for {client_ip} while accessing {nest_ip}")
     # Make a switch case for different actions
-    print(f"Revoking access for client {client_ip}")
-    manage_connection("deny", client_ip, nest_ip)
+    if (action == "alert-deny"):
+        print(f"Revoking access for client {client_ip}")
+        manage_connection("deny", client_ip, nest_ip)
 
 # Function to manage the connection (either allow or deny)
 def manage_connection(action, client_ip, nest_ip):
@@ -165,7 +167,8 @@ def manage_connection(action, client_ip, nest_ip):
     if action == "allow":
         if existing_record:
             print(f"Connection already exists: {existing_record}")
-            return -1
+            proxy_ip = existing_record["proxy_ip"]
+            return 0, proxy_ip
 
         # Pick a random proxy IP from the list of available proxies
         proxy_ip = random.choice(list(PROXY_IPS))
