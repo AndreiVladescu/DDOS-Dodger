@@ -12,6 +12,8 @@ services:
     ports:
       - "6001:6000" # Map port 6000 in the container to 6001 on the host for proxy1
     privileged: true
+    environment:
+      - PYTHONUNBUFFERED=1
     command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
 
   proxy2:
@@ -27,6 +29,8 @@ services:
     ports:
       - "6002:6000" # Map port 6000 in the container to 6002 on the host for proxy2
     privileged: true
+    environment:
+      - PYTHONUNBUFFERED=1
     command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
 
   proxy3:
@@ -42,6 +46,8 @@ services:
     ports:
       - "6003:6000" # Map port 6000 in the container to 6003 on the host for proxy3
     privileged: true
+    environment:
+      - PYTHONUNBUFFERED=1
     command: /bin/sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward && python proxy.py"
 
   master:
@@ -94,12 +100,11 @@ services:
         ipv4_address: 172.18.0.60
     ports:
       - "8081:18083" # Web UI access
-      - "1883:1883"  # MQTT Protocol
-      - "8084:8084"  # WebSocket Protocol
+      - "1883:1883" # MQTT Protocol
+      - "8084:8084" # WebSocket Protocol
     environment:
-      EMQX_ALLOW_ANONYMOUS: "true"  # Allow anonymous connections for testing
+      EMQX_ALLOW_ANONYMOUS: "true" # Allow anonymous connections for testing
 
-      
 #  client_attacker:
 #    build:
 #      context: ./client

@@ -52,7 +52,9 @@ def send_request():
                 print(f"Response from Proxy: {response.status_code} - {response.text}")
             except requests.exceptions.RequestException as e:
                 print(f"Error connecting to Proxy: {e}")
-            
+                time.sleep(2)
+                proxy_ip = query_dns_server("city.iot.gov", "172.18.0.10", 53)
+                
             print('Cycle completed')
             # Wait for 5 seconds before making the next request
             time.sleep(5)

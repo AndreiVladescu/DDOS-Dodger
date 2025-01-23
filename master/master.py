@@ -147,7 +147,11 @@ def handle_proxy_response(response):
     # Handle responses from proxies, e.g., updating connection records
     client_ip = response.get("client_ip")
     action = response.get("action")
-    print(f"Proxy {response.get('proxy_ip')} reports {action} for {client_ip}")
+    nest_ip = response.get("nest_ip")
+    print(f"Proxy {response.get('proxy_ip')} reports {action} for {client_ip} while accessing {nest_ip}")
+    # Make a switch case for different actions
+    print(f"Revoking access for client {client_ip}")
+    manage_connection("deny", client_ip, nest_ip)
 
 # Function to manage the connection (either allow or deny)
 def manage_connection(action, client_ip, nest_ip):

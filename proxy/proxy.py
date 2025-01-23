@@ -13,13 +13,15 @@ allowed_pairs = []
 proxy_ip = None
 
 # Threshold for packet count
-PACKET_THRESHOLD = 5
+packet_threshold = 5
+time_period = 60  # Time period in seconds
 
 # IPs that are internal
 ignored_ips = {"172.18.0.10", "172.18.0.30"}
 
-# Packet dictionary for each client IP
-packet_counts = defaultdict(int)
+# Structures to track packet counts and timestamps
+packet_counts = defaultdict(lambda: {"tcp": 0, "udp": 0})
+last_reset = time.time()
 
 # Interface for sniffing packets
 INTERFACE = "eth0"
@@ -74,6 +76,26 @@ def revoke_access_rule(client_ip, nest_ip):
 
     print(f"Revoked NAT rules: {client_ip} -> {nest_ip}")
 
+# Function to find the pair given one IP
+def find_pair(ip, allowed_pairs):
+    for pair in allowed_pairs:
+        if ip in pair:
+            return pair
+    return None
+
+def get_nest_ip(pair, client_ip):
+    if pair[0] == client_ip:
+        return pair[1]
+    return pair[0]
+
+# Function to reset counts periodically
+def reset_counts():
+    global last_reset
+    current_time = time.time()
+    if current_time - last_reset > time_period:
+        packet_counts.clear()
+        last_reset = current_time
+
 # Function to analyze each packet
 def packet_handler(packet):
     if packet.haslayer("IP"):
@@ -82,19 +104,39 @@ def packet_handler(packet):
         # Ignore internal or proxy IPs
         if src_ip in ignored_ips or src_ip == proxy_ip:
             return
+        
+        reset_counts()  # Reset counts periodically
 
         # SYN Flood Detection
         if packet.haslayer("TCP") and packet["TCP"].flags == "S":  # SYN flag
-            packet_counts[src_ip] += 1
-            if packet_counts[src_ip] > PACKET_THRESHOLD:
-                print(f"[ALERT] Potential SYN flood detected from {src_ip}. SYN count: {packet_counts[src_ip]}")
+            packet_counts[src_ip]["tcp"] += 1
+            if packet_counts[src_ip]["tcp"] > packet_threshold:
+                nest_ip = get_nest_ip(find_pair(src_ip, allowed_pairs), src_ip)
+                message = f"Potential SYN flood detected from {src_ip} while connecting to {nest_ip}. TCP count: {packet_counts[src_ip]['tcp']}"
+                mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
+                    "proxy_ip": proxy_ip,
+                    "nest_ip": nest_ip,
+                    "action": "alert",
+                    "client_ip": src_ip,
+                    "message": message
+                }))
+                packet_counts[src_ip]["tcp"] = 0
 
         # UDP Flood Detection
         elif packet.haslayer("UDP"):
-            packet_counts[src_ip] += 1
-            if packet_counts[src_ip] > PACKET_THRESHOLD:
-                print(f"[ALERT] Potential UDP flood detected from {src_ip}. UDP count: {packet_counts[src_ip]}")
-                
+            packet_counts[src_ip]["udp"] += 1
+            if packet_counts[src_ip]["udp"] > packet_threshold:
+                nest_ip = get_nest_ip(find_pair(src_ip, allowed_pairs), src_ip)
+                message = f"Potential UDP flood detected from {src_ip} while connecting to {nest_ip}. UDP count: {packet_counts[src_ip]['udp']}"
+                mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps({
+                    "proxy_ip": proxy_ip,
+                    "nest_ip": nest_ip,
+                    "action": "alert",
+                    "client_ip": src_ip,
+                    "message": message
+                }))
+                packet_counts[src_ip]["udp"] = 0
+
 def packet_counting_thread_func():
     sniff(iface=INTERFACE, prn=packet_handler, store=False)
 
@@ -102,11 +144,14 @@ def packet_counting_thread_func():
 def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode())
-
         received_proxy_ip = payload.get("proxy_ip")
+        print(f"Received message for {received_proxy_ip}")
+
         if received_proxy_ip != proxy_ip:
             return
         
+        print(f"Processing message: {payload}")
+
         action = payload.get("action")
         client_ip = payload.get("client_ip")
         nest_ip = payload.get("nest_ip")
@@ -114,18 +159,30 @@ def on_message(client, userdata, msg):
         if action == "allow":
             print(f"Received allow command for {client_ip} -> {nest_ip}")
             if add_access_rule(client_ip, nest_ip):
-                response = {"proxy_ip": proxy_ip, "action": "allowed", "client_ip": client_ip}
+                response = {"action": "allowed", 
+                            "client_ip": client_ip, 
+                            "nest_ip": nest_ip, 
+                            "proxy_ip": proxy_ip}
             else:
-                response = {"proxy_ip": proxy_ip, "action": "already_allowed", "client_ip": client_ip}
+                response = {"action": "already_allowed", 
+                            "client_ip": client_ip, 
+                            "nest_ip": nest_ip, 
+                            "proxy_ip": proxy_ip}
 
         elif action == "deny":
             print(f"Received deny command for {client_ip} -> {nest_ip}")
             if (client_ip, nest_ip) in allowed_pairs:
                 revoke_access_rule(client_ip, nest_ip)
                 allowed_pairs.remove((client_ip, nest_ip))
-                response = {"proxy_ip": proxy_ip, "action": "revoked", "client_ip": client_ip}
+                response = {"action": "revoked", 
+                            "client_ip": client_ip, 
+                            "nest_ip": nest_ip, 
+                            "proxy_ip": proxy_ip}
             else:
-                response = {"proxy_ip": proxy_ip, "action": "not_found", "client_ip": client_ip}
+                response = {"action": "not_found", 
+                            "client_ip": client_ip, 
+                            "nest_ip": nest_ip, 
+                            "proxy_ip": proxy_ip}
 
         # Publish the response to the response topic
         mqtt_client.publish(MQTT_TOPIC_RESPONSE, json.dumps(response))
