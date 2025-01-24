@@ -13,7 +13,7 @@ allowed_pairs = []
 proxy_ip = None
 
 # Threshold for packet count
-packet_threshold = 5
+packet_threshold = 15
 time_period = 60  # Time period in seconds
 
 # IPs that are internal

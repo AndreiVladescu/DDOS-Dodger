@@ -67,6 +67,8 @@ services:
       - emqx-dashboard
     ports:
       - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
 
   nest:
     build:
@@ -80,6 +82,8 @@ services:
       - "5000"
     ports:
       - "5002:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
 
   client_user:
     build:
@@ -91,6 +95,8 @@ services:
         ipv4_address: 172.18.0.100 # Static IP for Client 1
     depends_on:
       - proxy1
+    environment:
+      - PYTHONUNBUFFERED=1
 
   emqx-dashboard:
     image: emqx/emqx
@@ -105,18 +111,16 @@ services:
     environment:
       EMQX_ALLOW_ANONYMOUS: "true" # Allow anonymous connections for testing
 
-#  client_attacker:
-#    build:
-#      context: ./client
-#      dockerfile: Dockerfile.client
-#    container_name: client_attacker
-#    networks:
-#      test-network:
-#        ipv4_address: 172.18.0.110 # Static IP for Client 2
-#    depends_on:
-#      - proxy1
-#    environment:
-#      - SLEEP_INTERVAL=3
+  client_attacker:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.110 # Static IP for Client 2
+    depends_on:
+      - proxy1
 
 networks:
   test-network:

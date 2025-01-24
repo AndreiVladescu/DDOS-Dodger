@@ -32,7 +32,7 @@ def send_request():
     global proxy_ip
     global proxy_url
 
-    print("Starting the client...")
+    print("Starting the attacker...")
     while True:
 
         try:
@@ -55,9 +55,9 @@ def send_request():
                 break
                 
             print('Cycle completed')
-            # Wait for 5 seconds before making the next request
-            time.sleep(5)
-        time.sleep(5)
+            # Wait for 1 second before making the next request
+            time.sleep(1)
+        time.sleep(1)
         
 if __name__ == "__main__":
     send_request()

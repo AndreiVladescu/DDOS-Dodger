@@ -1,0 +1,24 @@
+# Dockerfile for Client
+FROM python:3.9-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install curl and any necessary packages
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    traceroute \
+    iproute2 \
+    curl 
+
+# Install the required dependencies
+RUN pip install requests dnslib
+
+# Copy the requester.py script to the container
+COPY attacker.py /app/attacker.py
+
+# Expose port 53 for DNS queries
+EXPOSE 53/udp
+
+# Set the default command to run the requester script
+CMD ["python","-u", "attacker.py"]
