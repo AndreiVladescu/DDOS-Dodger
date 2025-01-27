@@ -84,7 +84,11 @@ services:
       - "5002:5000"
     environment:
       - PYTHONUNBUFFERED=1
-
+    privileged: true  # Enable privileged mode for elevated permissions
+    cap_add:
+      - NET_ADMIN  # Allow the container to modify network configurations
+      - SYS_ADMIN  # Allow sysctl changes
+      
   client_user:
     build:
       context: ./client

@@ -53,7 +53,7 @@ def setup_nftables():
 # Function to apply DNAT and SNAT rules using nftables
 def apply_filter_rules(client_ip, nest_ip):
     # DNAT
-    os.system(f"nft add rule ip nat prerouting iifname eth0 ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 5000 dnat to {nest_ip}")
+    os.system(f"nft add rule ip nat prerouting iifname eth0 ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 80 dnat to {nest_ip}")
     # SNAT
     os.system(f"nft add rule ip nat postrouting oifname eth0 ip saddr {client_ip} ip daddr {nest_ip} snat to {proxy_ip}")
     print(f"Added NAT rules: {client_ip} -> {nest_ip}")
@@ -69,7 +69,7 @@ def add_access_rule(client_ip, nest_ip):
 # Function to remove a specific IP rule from nftables
 def revoke_access_rule(client_ip, nest_ip):
     # Find and delete DNAT rule
-    os.system(f"nft delete rule nat prerouting handle $(nft --handle list ruleset | egrep 'iifname \"eth0\" ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 5000 dnat to {nest_ip}' | rev | cut -d' ' -f1 | rev)")
+    os.system(f"nft delete rule nat prerouting handle $(nft --handle list ruleset | egrep 'iifname \"eth0\" ip saddr {client_ip} ip daddr {proxy_ip} tcp dport 80 dnat to {nest_ip}' | rev | cut -d' ' -f1 | rev)")
 
     # Find and delete SNAT rule
     os.system(f"nft delete rule nat postrouting handle $(nft --handle list ruleset | egrep 'oifname \"eth0\" ip saddr {client_ip} ip daddr {nest_ip} snat to {proxy_ip}' | rev | cut -d' ' -f1 | rev)")
@@ -207,7 +207,6 @@ def setup_mqtt():
     print(f"Proxy service running at {proxy_ip}")
 
 if __name__ == "__main__":
-
     sleep(5)
     # Starting Scapy sniffing
     threading.Thread(target=packet_counting_thread_func).start()

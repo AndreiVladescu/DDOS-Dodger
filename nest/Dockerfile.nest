@@ -8,7 +8,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     iputils-ping \
     traceroute \
+    iptables \
+    procps \
     iproute2 \
+    tcpdump \
     curl 
 
 # Install Flask

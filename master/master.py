@@ -73,7 +73,6 @@ class CustomDNSHandler(socketserver.BaseRequestHandler):
         else:
             return "0.0.0.0"  # Define fallback IP, or None for NXDOMAIN
 
-
 class ThreadedDNSServer:
     def __init__(self, host="0.0.0.0", port=53):
         self.server = socketserver.UDPServer((host, port), CustomDNSHandler)

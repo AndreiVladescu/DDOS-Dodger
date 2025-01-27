@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     traceroute \
     iproute2 \
+    tcpdump \
     curl 
 
 # Install the required dependencies

@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     iproute2 \
     iputils-ping \
     traceroute \
+    tcpdump \
     && rm -rf /var/lib/apt/lists/*
 
 # Install scapy
@@ -20,7 +21,7 @@ COPY proxy.py /app/proxy.py
 
 # Expose the TCP ports used for communication
 EXPOSE 6000
-EXPOSE 5000
+EXPOSE 80
 
 # Run the proxy server
 CMD ["python","-u", "proxy.py"]

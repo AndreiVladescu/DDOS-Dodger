@@ -39,7 +39,7 @@ def send_request():
             # Query the DNS server for the Proxy's IP address
             proxy_ip = query_dns_server("city.iot.gov", "172.18.0.10", 53)
             print(f"Server IP address received from DNS: {proxy_ip}")
-            proxy_url = f"http://{proxy_ip}:5000/"
+            proxy_url = f"http://{proxy_ip}:80/"
         except Exception as e:
             print(f"Error querying DNS server: {e}")
             continue
