@@ -154,7 +154,7 @@ def handle_proxy_response(response):
     # Make a switch case for different actions
     if (action == "alert-revoke"):
         print(f"Revoking access for client {client_ip}")
-        manage_connection("revoke", client_ip, nest_ip)
+        manage_connection("deny", client_ip, nest_ip)
 
 # Function to manage the connection
 def manage_connection(action, client_ip, nest_ip):
@@ -168,7 +168,7 @@ def manage_connection(action, client_ip, nest_ip):
     if action == "allow":
         if client_ip in blacklist:
             print(f"Client {client_ip} is in the blacklist. Access denied.")
-            return -2
+            return -2, None
 
         if existing_record:
             print(f"Connection already exists: {existing_record}")
@@ -200,7 +200,7 @@ def manage_connection(action, client_ip, nest_ip):
     elif action == "revoke":
         if not existing_record:
             print(f"No existing connection for {client_ip} -> {nest_ip}. Nothing to revoke.")
-            return -1
+            return -1, None
 
         proxy_ip = existing_record["proxy_ip"]
 
@@ -216,11 +216,32 @@ def manage_connection(action, client_ip, nest_ip):
         }
         mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
         print(f"Published 'revoke' command to {proxy_ip} for {client_ip} -> {nest_ip}")
+        return -1, None
+    
     elif action == "deny":
         blacklist.append(client_ip)
         print(f"Client {client_ip} added to blacklist")
-        return 0
 
+        if not existing_record:
+            print(f"No existing connection for {client_ip} -> {nest_ip}. Will deny but not revoke.")
+            return -2, None
+        
+        proxy_ip = existing_record["proxy_ip"]
+
+        # Remove the connection from the records
+        connection_records.remove(existing_record)
+
+        # Publish the 'revoke' command to the appropriate proxy
+        message = {
+            "action": "revoke",
+            "client_ip": client_ip,
+            "nest_ip": nest_ip,
+            "proxy_ip": proxy_ip
+        }
+        mqtt_client.publish(MQTT_TOPIC_COMMAND, json.dumps(message))
+        print(f"Published 'revoke' command to {proxy_ip} for {client_ip} -> {nest_ip}")
+        return -2, None
+    
 def setup_mqtt():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
