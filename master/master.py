@@ -29,6 +29,14 @@ blacklist = []
 # MQTT client
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
+
+### Benchmark related functions ###
+
+def preload_users():
+    for y in range (0, 255):
+        for x in range (1, 254):
+            rc, proxy_ip = manage_connection(action="allow", client_ip=f'10.0.{y}.{x}', nest_ip="172.18.0.30")
+
 ### DNS Server Communication ###
 
 class CustomDNSHandler(socketserver.BaseRequestHandler):
