@@ -197,6 +197,11 @@ def on_connect(client, userdata, flags, rc, properties):
         else:
             print(f"Failed to connect to MQTT broker with code {rc}")
 
+# Benchmark function to preload users
+def preload_users():
+    for i in range (0, 255):
+        add_access_rule(f'10.0.0.{i}','172.18.0.30')
+
 def setup_mqtt():
     global proxy_ip
     proxy_ip = get_proxy_ip()
