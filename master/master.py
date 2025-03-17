@@ -33,10 +33,10 @@ mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 ### Benchmark related functions ###
 
 def preload_users():
-    for y in range (0, 255):
-        for x in range (1, 254):
-            rc, proxy_ip = manage_connection(action="allow", client_ip=f'10.0.{y}.{x}', nest_ip="172.18.0.30")
-
+    #for x in range (1, 254):
+    #    rc, proxy_ip = manage_connection(action="allow", client_ip=f'10.0.0.{x}', nest_ip="172.18.0.30", crowbar=True)
+    #manage_connection(action="allow", client_ip=f'172.18.0.110', nest_ip="172.18.0.30", crowbar=True)
+    pass
 ### DNS Server Communication ###
 
 class CustomDNSHandler(socketserver.BaseRequestHandler):
@@ -164,11 +164,11 @@ def handle_proxy_response(response):
         manage_connection("deny", client_ip, nest_ip)
 
 # Function to manage the connection
-def manage_connection(action, client_ip, nest_ip):
+def manage_connection(action, client_ip, nest_ip, crowbar = False):
     # Check if the action is valid
     if action not in ["allow", "revoke", "deny"]:
         raise ValueError("Invalid action. Must be 'allow', 'revoke' or 'deny'.")
-
+    
     # Check if the client_ip is already recorded
     existing_record = next((record for record in connection_records if record["client_ip"] == client_ip and record["nest_ip"] == nest_ip), None)
 
@@ -182,8 +182,12 @@ def manage_connection(action, client_ip, nest_ip):
             proxy_ip = existing_record["proxy_ip"]
             return 0, proxy_ip
 
-        # Pick a random proxy IP from the list of available proxies
-        proxy_ip = random.choice(list(PROXY_IPS))
+        if crowbar:
+            # Pick only one proxy to stress test
+            proxy_ip = '172.18.0.23'
+        else:
+            # Pick a random proxy IP from the list of available proxies
+            proxy_ip = random.choice(list(PROXY_IPS))
 
         # Add the new connection to the records
         connection_records.append({
@@ -264,6 +268,8 @@ if __name__ == "__main__":
     threading.Thread(target=web_app).start()
 
     setup_mqtt()
+
+    preload_users()
 
     while True:
         user_input = input("\nEnter action (allow/revoke/deny) client_ip nest_ip: ")

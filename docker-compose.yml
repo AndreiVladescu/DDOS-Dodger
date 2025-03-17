@@ -115,14 +115,91 @@ services:
     environment:
       EMQX_ALLOW_ANONYMOUS: "true" # Allow anonymous connections for testing
 
-  client_attacker:
+  client_attacker1:
     build:
       context: ./attacker
       dockerfile: Dockerfile.attacker
-    container_name: client_attacker
+    container_name: client_attacker1
     networks:
       test-network:
-        ipv4_address: 172.18.0.110 # Static IP for Client 2
+        ipv4_address: 172.18.0.111
+    depends_on:
+      - proxy1
+
+  client_attacker2:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker2
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.112
+    depends_on:
+      - proxy1
+
+  client_attacker3:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker3
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.113
+    depends_on:
+      - proxy1
+
+  client_attacker4:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker4
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.114
+    depends_on:
+      - proxy1
+
+  client_attacker5:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker5
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.115
+    depends_on:
+      - proxy1
+
+  client_attacker6:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker6
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.116
+    depends_on:
+      - proxy1
+
+  client_attacker7:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker7
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.117
+    depends_on:
+      - proxy1
+
+  client_attacker8:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.attacker
+    container_name: client_attacker8
+    networks:
+      test-network:
+        ipv4_address: 172.18.0.118
     depends_on:
       - proxy1
 
