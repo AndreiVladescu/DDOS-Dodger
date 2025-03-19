@@ -30,7 +30,7 @@ def run_indefinitely():
 if __name__ == "__main__":
     # Define the container's network interface and target server IP
     container_interface = "eth0"  # Replace with the actual container's network interface
-    target_server_ip = "192.168.0.90"  # Replace with the target server's IP address
+    target_server_ip = "192.168.0.172"  # Replace with the target server's IP address
 
     # Configure routing and NAT
     configure_container_routing(container_interface, target_server_ip)

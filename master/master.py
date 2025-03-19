@@ -33,10 +33,9 @@ mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 ### Benchmark related functions ###
 
 def preload_users():
-    #for x in range (1, 254):
-    #    rc, proxy_ip = manage_connection(action="allow", client_ip=f'10.0.0.{x}', nest_ip="172.18.0.30", crowbar=True)
-    #manage_connection(action="allow", client_ip=f'172.18.0.110', nest_ip="172.18.0.30", crowbar=True)
-    pass
+    for x in range (1, 254):
+        rc, proxy_ip = manage_connection(action="allow", client_ip=f'10.0.0.{x}', nest_ip="172.18.0.30", crowbar=True)
+    
 ### DNS Server Communication ###
 
 class CustomDNSHandler(socketserver.BaseRequestHandler):
