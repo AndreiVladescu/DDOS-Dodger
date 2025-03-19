@@ -56,7 +56,7 @@ def send_request():
                 
             print('Cycle completed')
             # Wait for 1 second before making the next request
-            time.sleep(1)
+            #time.sleep(1)
         time.sleep(1)
         
 if __name__ == "__main__":

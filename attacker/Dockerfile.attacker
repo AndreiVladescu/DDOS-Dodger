@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     curl 
 
 # Install the required dependencies
-RUN pip install requests dnslib
+RUN pip install requests dnslib scapy
 
 # Copy the requester.py script to the container
 COPY attacker.py /app/attacker.py
