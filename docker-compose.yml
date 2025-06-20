@@ -11,6 +11,7 @@ services:
       - emqx-dashboard
     ports:
       - "6001:6000" # Map port 6000 in the container to 6001 on the host for proxy1
+      - "8881:80" # Map port 80 in the container to 8881 on the host for proxy1
     privileged: true
     environment:
       - PYTHONUNBUFFERED=1
@@ -28,6 +29,7 @@ services:
       - emqx-dashboard
     ports:
       - "6002:6000" # Map port 6000 in the container to 6002 on the host for proxy2
+      - "8882:80" # Map port 80 in the container to 8882 on the host for proxy2
     privileged: true
     environment:
       - PYTHONUNBUFFERED=1
@@ -45,6 +47,7 @@ services:
       - emqx-dashboard
     ports:
       - "6003:6000" # Map port 6000 in the container to 6003 on the host for proxy3
+      - "8883:80" # Map port 80 in the container to 8883 on the host for proxy3
     privileged: true
     environment:
       - PYTHONUNBUFFERED=1
@@ -67,6 +70,8 @@ services:
       - emqx-dashboard
     ports:
       - "8080:8080"
+      - "53:53/udp"
+      - "53:53/tcp"
     environment:
       - PYTHONUNBUFFERED=1
 
@@ -81,14 +86,14 @@ services:
     expose:
       - "5000"
     ports:
-      - "5002:5000"
+      - "9000:5000"
     environment:
       - PYTHONUNBUFFERED=1
-    privileged: true  # Enable privileged mode for elevated permissions
+    privileged: true # Enable privileged mode for elevated permissions
     cap_add:
-      - NET_ADMIN  # Allow the container to modify network configurations
-      - SYS_ADMIN  # Allow sysctl changes
-      
+      - NET_ADMIN # Allow the container to modify network configurations
+      - SYS_ADMIN # Allow sysctl changes
+
   client_user:
     build:
       context: ./client
@@ -109,99 +114,22 @@ services:
       test-network:
         ipv4_address: 172.18.0.60
     ports:
-      - "8081:18083" # Web UI access
+      - "18083:18083" # Web UI access
       - "1883:1883" # MQTT Protocol
       - "8084:8084" # WebSocket Protocol
     environment:
       EMQX_ALLOW_ANONYMOUS: "true" # Allow anonymous connections for testing
 
-  client_attacker1:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker1
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.111
-    depends_on:
-      - proxy1
-
-  client_attacker2:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker2
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.112
-    depends_on:
-      - proxy1
-
-  client_attacker3:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker3
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.113
-    depends_on:
-      - proxy1
-
-  client_attacker4:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker4
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.114
-    depends_on:
-      - proxy1
-
-  client_attacker5:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker5
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.115
-    depends_on:
-      - proxy1
-
-  client_attacker6:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker6
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.116
-    depends_on:
-      - proxy1
-
-  client_attacker7:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker7
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.117
-    depends_on:
-      - proxy1
-
-  client_attacker8:
-    build:
-      context: ./attacker
-      dockerfile: Dockerfile.attacker
-    container_name: client_attacker8
-    networks:
-      test-network:
-        ipv4_address: 172.18.0.118
-    depends_on:
-      - proxy1
+#  client_attacker1:
+#    build:
+#      context: ./attacker
+#      dockerfile: Dockerfile.attacker
+#    container_name: client_attacker1
+#    networks:
+#      test-network:
+#        ipv4_address: 172.18.0.111
+#    depends_on:
+#      - proxy1
 
 networks:
   test-network:
