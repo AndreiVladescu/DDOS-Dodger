@@ -1,0 +1,64 @@
+\documentclass[a4paper,11pt]{scrreprt}                       % default is A4 paper style and 11pt font size
+
+% language={english/romanian} selects between the languages used in the manusript (changes, e.g., the name of the chapter)
+
+% type={bachelor/master/phd} selects between the type of manusript (changes, e.g., the titlepage make-up)
+\usepackage[language=english,type=master]{cls/standard} % introduces useful packages and commands(CHANGE ONLY IF YOU KNOW WHAT YOU'RE DOING)
+
+%\bibliographystyle{ieee}
+\bibliography{cls/references}
+
+\include{cls/glossary}        																	% put here all your glossary terms; only the ones actually used will appear in the glossary list of the manuscript
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%% frontmatter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagenumbering{roman}																				% default numbering for the frontmatter is roman
+
+\title{Securing IoT Networks through Moving Target Defence}					    % title of your manuscript
+\author{Andrei Vlădescu}																				% author name
+\advisor{Prof. dr. ing. Ion Bica}																			    % advisor name
+
+\maketitle
+
+% show table of contents, figures, tables and algorithms
+
+\tableofcontents 
+
+\input{chapters/abstract}
+
+\printnoidxglossaries																				% \printglossaries works only if the makeindex has the correct arguments
+\listoffigures 
+\addcontentsline{toc}{chapter}{\listfigurename}
+%\listoftables
+%\addcontentsline{toc}{chapter}{\listtablename}
+
+%\addcontentsline{toc}{chapter}{\listalgorithmcfname}
+%\listofalgorithms
+
+\clearpage
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%% mainmatter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagenumbering{arabic}																			% default numbering for the mainmatter is arabic
+
+% here is the text of you manuscript; you can put it directly here but it is better to include files (the main file will be more compact)
+
+\input{chapters/introduction}
+\input{chapters/soa}
+\input{chapters/architecture}
+\input{chapters/testing}
+\input{chapters/conclusion}
+%%%%%%%%%%%%%%%%%%%%%% back matter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\appendix
+%\appendixpage
+%\addappheadtotoc
+%\begin{appendices}																				  % from here onwards are the appendices
+%\end{appendices}
+
+\cleardoublepage
+
+\printbibliography
+
+\end{document}
