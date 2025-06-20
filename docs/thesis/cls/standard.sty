@@ -1,0 +1,313 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{./cls/standard}[2013/06/07 Standard LaTeX utilities]
+
+\makeatletter
+
+\usepackage{etoolbox,ifthen}      % useful for ifthen type of commands
+\usepackage{kvoptions}            % useful for defining key/value pairs as options for packages and classes
+
+% We only support English, so no language switching is needed.
+% Define booleans for document type only.
+\newbool{@dis}\setbool{@dis}{true}
+\newbool{@lic}\setbool{@lic}{false}
+\newbool{@phd}\setbool{@phd}{false}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Define and set up key/value pairs for the package options
+\SetupKeyvalOptions{
+  family=std,
+  prefix=std@
+}
+\DeclareStringOption[english]{language}  % language option is ignored because only English is supported
+\DeclareStringOption[phd]{type}          % type: phd, master (dis), bachelor (lic)
+
+\DeclareDefaultOption{%
+  \PackageWarning{\@currname}{Unknown option `\CurrentOption'}%
+}
+
+\ProcessKeyvalOptions*
+
+\ifthenelse{\equal{\std@type}{phd}}{%
+  \setbool{@phd}{true}\setbool{@lic}{false}\setbool{@dis}{false}%
+}{}
+\ifthenelse{\equal{\std@type}{bachelor}}{%
+  \setbool{@lic}{true}\setbool{@phd}{false}\setbool{@dis}{false}%
+}{}
+\ifthenelse{\equal{\std@type}{master}}{%
+  \setbool{@dis}{true}\setbool{@lic}{false}\setbool{@phd}{false}%
+}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define size for figures (as percentage of the page width)
+\def \singlefigure      {.75\textwidth}
+\def \singlelongfigure  {.95\textwidth}
+\def \doublefigure      {.475\textwidth}
+\def \triplefigure      {.33\textwidth}
+\def \quadfigure        {.225\textwidth}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% various useful packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[top=2cm,bottom=2cm,right=2cm,left=3cm]{geometry} % default margins: top=2cm, bottom=2cm, right=2cm, left=3cm
+\geometry{a4paper}                                           % Set the page size to be A4
+\usepackage{setspace}                                        % setting line spacing
+\usepackage{fancyhdr}                                        % fancy headers/footers
+\usepackage{appendix}                                        % for appendices
+\usepackage{lettrine}                                        % lettrine for chapter opening
+\usepackage{xspace}                                          % \xspace at end of macro in text
+\usepackage{enumitem}                                        % more control over lists
+\usepackage{fancyvrb}                                        % fancy verbatim
+\usepackage{fontspec}                                        % XeLaTeX/LuaLaTeX font support
+
+\usepackage{color}
+\usepackage{xcolor}                                          % for defining colors
+\usepackage{fancybox}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},%
+  commentstyle=\color{codegreen},%
+  keywordstyle=\color{magenta},%
+  numberstyle=\tiny\color{codegray},%
+  stringstyle=\color{codepurple},%
+  basicstyle=\ttfamily\footnotesize,%
+  breakatwhitespace=false,%
+  breaklines=true,%
+  captionpos=b,%
+  keepspaces=true,%
+  numbers=left,%
+  numbersep=5pt,%
+  showspaces=false,%
+  showstringspaces=false,%
+  showtabs=false,%
+  tabsize=2 
+}
+\lstset{style=mystyle}
+
+% \usepackage[algo2e, linesnumbered, algoruled, algochapter]{algorithm2e} % algorithm environments
+\usepackage[
+  algoruled,     % puts a rule above & below the float (same as ruled)
+  algochapter,   % numbers algorithms as <chapter>.<algo#>
+  vlined         % draws vertical bars for nested if/else blocks
+]{algorithm2e}
+
+\usepackage{graphicx}                       % including figures
+\usepackage[lofdepth,lotdepth]{subfig}      % subfigures
+\usepackage{array,multirow,longtable}       % tables
+\usepackage{amsfonts,amsmath,amssymb,amsthm,mathtools} % math packages
+
+\usepackage[
+  style=ieee,      % IEEE‐style labels/formatting
+  sorting=none,    % keep entries in citation order
+  backend=biber    % or ‘bibtex’ if you prefer, but ‘biber’ is recommended
+]{biblatex}
+
+\usepackage{fontspec}                       % for Unicode input/output
+\usepackage{csquotes}                       % for quotation styles
+
+%%%%%%%%%%%%%%%%%%%%%%% hyperref package %%%%%%%%%%%%%%%%%%%%%%
+\definecolor{webgreen}{rgb}{0, 0.5, 0}       % less intense green
+\definecolor{webblue}{rgb}{0, 0, 0.5}        % less intense blue
+\definecolor{webred}{rgb}{0.5, 0, 0}         % less intense red
+\definecolor{webgray}{rgb}{0.2, 0.2, 0.2}  % dark gray, near-black
+
+\usepackage[unicode,
+            pdfpagemode={UseNone},
+            pdfpagelayout={SinglePage},
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=0,
+            colorlinks=true,
+            linkcolor=webgray,
+            citecolor=webgray,
+            urlcolor=webgray,
+            pdfstartview={FitV},
+            breaklinks=true]{hyperref}
+
+\usepackage[toc]{glossaries}                 % for glossaries
+\makenoidxglossaries                        % noindex glossaries
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% layout settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setstretch{1}                               % default line spacing: 1
+\setlength{\parindent}{1cm}                  % default paragraph indent: 1cm
+\setlength{\parskip}{1em plus .4em minus .3em} % default paragraph space
+
+% Header and footer settings
+\pagestyle{fancy}                            % select fancy header/footer
+\fancyhead{}                                 % clear header
+\fancyfoot{}                                 % clear footer
+\fancyhead[L]{\leftmark}                     % left page: chapter title
+\fancyfoot[C]{\thepage}                      % center of footer: page number
+\setlength{\headheight}{14pt}                % header height
+\renewcommand{\headrulewidth}{1pt}           % rule under header
+
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter.\ #1}{}}
+\newcommand{\myLettrine}[2]{\lettrine[lines=2, lraise=0.15]{#1}{#2}}
+
+% Patch KOMA’s English captions so TOC says “Table of Contents”
+\defcaptionname{\languagename}{\contentsname}{Table of Contents}
+
+% Table of contents depth
+\setcounter{tocdepth}{3}
+\setcounter{lofdepth}{2}
+\setcounter{lotdepth}{2}
+
+% Define advisor command (for titlepage)
+\newcommand\advisor[1]{\renewcommand\@advisor{#1}}
+\newcommand\@advisor{}
+
+% Titlepage: English only
+\renewcommand{\maketitle}{
+  \begin{titlepage}
+    % Include logos
+
+    \begin{center}
+    \textbf{
+     Romania \\
+     \vspace{1em}
+      University Politehnica of Bucharest \\
+      Faculty of Automatic Control and Computers \\
+      Computer Science and Engineering Department\\
+      \vspace{1em}
+      Advanced Cybersecurity
+     \vspace{4em}
+}
+    \begin{center}
+      \includegraphics[height=16em]{images/logo/upb}
+    \end{center}
+    \vspace{3em}
+      
+      {\Huge\textbf{%
+        \ifbool{@dis}{MASTER'S THESIS}{}%
+        \ifbool{@lic}{BACHELOR THESIS}{}%
+        \ifbool{@phd}{PHD THESIS}{}%
+      }}
+      \vspace{3em}
+
+      {\huge\textbf{\@title}}
+    \end{center}
+
+
+    
+  \vspace{5em}
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+  \raggedright
+  \Large{
+    \textbf{Scientific Advisor}\\
+    \@advisor
+  }
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+  \raggedleft
+  \Large{
+    \textbf{Graduate}\\
+    \@author
+  }
+\end{minipage}
+
+      \vfill
+      \begin{center}
+       \textbf{ Bucharest \\ \the\year}
+      \end{center}
+    }
+  \end{titlepage}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% theorem styles and referencing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[chapter]
+\newtheorem{prop}{Proposition}[chapter]
+\newtheorem{cor}{Corollary}[chapter]
+\newtheorem{lem}{Lemma}[chapter]
+\newtheorem{df}{Definition}[chapter]
+
+\theoremstyle{definition}
+\newtheorem{rem}{Remark}[chapter]
+\newtheorem{assum}{Assumption}[chapter]
+\newtheorem{hyp}{Hypothesis}[chapter]
+
+% End-of-proof symbols
+\newcommand{\eot}{\ensuremath{\hfill\square}}
+\newcommand{\eor}{\ensuremath{\hfill\blacklozenge}}
+\def\qed{\ensuremath{\hfill\blacksquare}}
+
+% Reference macros (English only)
+\newcommand{\figref}[1]{Figure~\ref{#1}\xspace}
+\newcommand{\chapref}[1]{Chapter~\ref{#1}\xspace}
+\newcommand{\subsecref}[1]{Subsection~\ref{#1}\xspace}
+\newcommand{\subsubsecref}[1]{Subsubsection~\ref{#1}\xspace}
+\newcommand{\secref}[1]{Section~\ref{#1}\xspace}
+\newcommand{\appref}[1]{Appendix~\ref{#1}\xspace}
+\newcommand{\remref}[1]{Remark~\ref{#1}\xspace}
+\newcommand{\propref}[1]{Proposition~\ref{#1}\xspace}
+\newcommand{\cororef}[1]{Corollary~\ref{#1}\xspace}
+\newcommand{\algref}[1]{Algorithm~\ref{#1}\xspace}
+\newcommand{\lstref}[1]{Source~\ref{#1}\xspace}
+\newcommand{\thmref}[1]{Theorem~\ref{#1}\xspace}
+\newcommand{\assumref}[1]{Assumption~\ref{#1}\xspace}
+\newcommand{\genref}[2]{#1~\ref{#2}\xspace}
+\newcommand{\lemref}[1]{Lemma~\ref{#1}\xspace}
+\newcommand{\defref}[1]{Definition~\ref{#1}\xspace}
+\newcommand{\tabref}[1]{Table~\ref{#1}\xspace}
+\newcommand{\hypref}[1]{Hypothesis~\ref{#1}\xspace}
+\renewcommand{\algorithmautorefname}{Algorithm}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% some command shortcuts %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+
+\newcommand{\bse}{\begin{subequations}}
+\newcommand{\ese}{\end{subequations}}
+
+\def\bal#1\eal{\begin{align}#1\end{align}}
+\def\baln#1\ealn{\begin{align*}#1\end{align*}}
+
+\newcommand{\ben}{\begin{equation*}}
+\newcommand{\een}{\end{equation*}}
+
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+
+\newcommand{\bean}{\begin{eqnarray*}}
+\newcommand{\eean}{\end{eqnarray*}}
+
+\newcommand{\bbm}{\begin{bmatrix}}
+\newcommand{\ebm}{\end{bmatrix}}
+
+\newcommand{\bBm}{\begin{Bmatrix}}
+\newcommand{\eBm}{\end{Bmatrix}}
+
+\newcommand{\bvm}{\begin{vmatrix}}
+\newcommand{\evm}{\end{vmatrix}}
+
+\newcommand{\bVm}{\begin{Vmatrix}}
+\newcommand{\eVm}{\end{Vmatrix}}
+
+\newcommand{\bpm}{\begin{pmatrix}}
+\newcommand{\epm}{\end{pmatrix}}
+
+\newcommand{\bnm}{\begin{matrix}}
+\newcommand{\enm}{\end{matrix}}
+
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+
+\makeatother
+\endinput

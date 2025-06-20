@@ -1,0 +1,62 @@
+\documentclass[a4paper,11pt]{scrreprt}
+
+\usepackage[type=master]{./cls/standard}
+
+% Metadata
+%\title{Securing IoT Networks through Moving Target Defence}
+\author{Amzuloiu Teodor}
+\advisor{Conf. dr. ing. Leordeanu}
+
+% ---- Override university information ----
+\makeatletter
+\renewcommand{\maketitle}{
+  \begin{titlepage}
+    \begin{center}
+      {\large\bfseries % <-- You can change size here (e.g., \Huge, \LARGE, \large)
+        ROMANIA\\[1em]
+        POLITEHNICA UNIVERSITY OF BUCHAREST\\
+        FACULTY OF AUTOMATIC CONTROL AND COMPUTER SCIENCE\\
+        DEPARTMENT OF AUTOMATIC CONTROL AND SYSTEMS ENGINEERING\\[1em]
+        ADVANCED CYBERSECURITY
+      }
+      
+      \vspace{6em}
+      \includegraphics[height=16em]{images/logo/upb} % Update path as needed
+
+      \vspace{4em}
+      {\Huge\bfseries
+        \ifbool{@dis}{MASTER'S THESIS}{}%
+        \ifbool{@lic}{BACHELOR THESIS}{}%
+        \ifbool{@phd}{PHD THESIS}{}%
+      }
+
+      \vspace{2em}
+      {\huge\bfseries \@title}
+    \end{center}
+
+    \vspace{3em}
+    \noindent
+    \begin{minipage}[t]{0.5\textwidth}
+      \raggedright
+      \large\textbf{SCIENTIFIC ADVISOR}\\
+      \@advisor
+    \end{minipage}%
+    \begin{minipage}[t]{0.5\textwidth}
+      \raggedleft
+      \Large\textbf{GRADUATE}\\
+      \@author
+    \end{minipage}
+
+    \vfill
+    \begin{center}
+      \textbf{BUCHAREST \\ \the\year}
+    \end{center}
+  \end{titlepage}
+}
+\makeatother
+
+\begin{document}
+
+\maketitle
+
+\end{document}

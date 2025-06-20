@@ -1,0 +1,23 @@
+\chapter{Conclusions}
+\label{chap:conclusion}
+The evaluation results highlight the practical benefits and limitations of deploying this system in an IoT microservice infrastructure. Under simulated DDoS conditions, the system demonstrated an advantage in reducing the sustained attack, compared to an unprotected baseline. The metrics confirm that a moving target defense approach can significantly degrade a coordinated botnet flooding attack. In the resulted tests, the delays remained within acceptable thresholds, suggesting that legitimate clients can access the service with minimal degradation in their experience.
+
+One of the most notable benefits this research contributes is the low barrier of integration, as the defense mechanism operates at the network layer, making use of IP shuffling reactively. Moreover, the services on top of the TCP/IP stack do not require special handling or changes to assure a working state, nor does the system require a pool of reserved IP addresses from the ISP to function properly in the public Internet. This alone qualifies the appraoch as being a viable option in a real-world scenario, as the cost of implementing a defense need to be low. 
+
+The power consumption measurement assured that the IoT device can be closely monitored through a side-channel for disruptions and status of the service. We consider this approach crucial in an IoT protection system's benchmark, as it also shows how much the tested system conserves energy during a volumetric flood. 
+
+\section{System Limitations}
+As a notable observation, the system is not to be used solely without other security measures. MTD is not a concept to supercede conventional security measures, but rather complement them. We can observe this clearly in the big delay between blocking an IP address from the attacker side and the power consumption of the IoT device in \autoref{fig:power-usage}.limited device. 
+
+However, the system also introduced measureable trade-offs, the most prominent being an increased overhead in the IP shuffling strategy. Dropping the IP of the proxy suddenly, means that all clients, regardless of their intentions, would be disrupted. The disruption couldn't be established from a realistic point of view, as this requires communication with the ISP and needs special care to happen fast.
+
+Moreover, the system has a big downside, as opposed to conventional DDoS protection methods, such as packet inspection, since it doesn't match the signatures of the received packets to determine if they are malign packets or not. The system at the moment implements a volumetric detection, be it false positive or true positive, meaning that in a usage surge, legitimate clients with an increased request per second rate will be flagged as malign actors trying to destabilize the system.
+
+\section{Future Improvements}
+
+To improve the architecture of this system we propose the adoption of a dedicated DDoS packet-inspector, such as novel machine learning (ML) models. This will significantly increase the reliability of the system, as the threshold of packets is virtually eliminated, and is taken care of by the ML model. 
+
+Another modification that would improve the security is to add an intermediary layer of proxies. This wouldn't diminish the result of a DDoS considerably, although it would reduce the efforts of other types of attacks, such as malicious payloads being sent, or reccoinassance campaigns that aim to scan the network and find the IoT device. This additional layer of indirection can be assymetrical and heterogenous, as in using a graph pathfinding algorithm with nodes being proxies, regardless of their usage, or if they are used as "gateway proxies" - meaning the first layer of indirection of a client. 
+
+We also believe that the adoption of IPv6 can help in implementing a hybrid moving target defense approach, in the sense that a block of IPv6 addresses can be reserved, given the big addressing space of IPv6. These addresses would dampen the disruption caused by the IPv4 shuffling, as the ISP needs to allocate from its internal DHCP an unreserved IP address.
+ 
