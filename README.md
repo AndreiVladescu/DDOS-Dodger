@@ -88,5 +88,5 @@ docker-compose down
   Represents a vulnerable microservice written in Arduino Framework, which I used with an ESP8266 devboard.
 
 ```
-![Infrastructure](docs\thesis\images\system_architecture "System Architecture")
+![Infrastructure](./docs/thesis/images/system_architecture.png)
 ```
