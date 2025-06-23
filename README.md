@@ -87,6 +87,4 @@ docker-compose down
 - **`microcontroller_web_server`**  
   Represents a vulnerable microservice written in Arduino Framework, which I used with an ESP8266 devboard.
 
-```
-![Infrastructure](./docs/thesis/images/system_architecture.png)
-```
+![System Architecture](https://raw.githubusercontent.com/AndreiVladescu/DDOS-Dodger/refs/heads/main/docs/thesis/images/system_architecture.png)
